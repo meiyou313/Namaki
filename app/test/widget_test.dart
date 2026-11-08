@@ -3,20 +3,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arman_vpn/app_info.dart';
-import 'package:arman_vpn/app_settings.dart';
-import 'package:arman_vpn/core/core_api.dart';
-import 'package:arman_vpn/core/core_controller.dart';
-import 'package:arman_vpn/core/models.dart';
-import 'package:arman_vpn/core/tun_service.dart';
-import 'package:arman_vpn/core/updates.dart';
-import 'package:arman_vpn/desktop/close_dialog.dart';
-import 'package:arman_vpn/l10n/app_localizations.dart';
-import 'package:arman_vpn/ui/app.dart';
-import 'package:arman_vpn/ui/settings_page.dart'
+import 'package:merged_vpn/app_info.dart';
+import 'package:merged_vpn/app_settings.dart';
+import 'package:merged_vpn/core/core_api.dart';
+import 'package:merged_vpn/core/core_controller.dart';
+import 'package:merged_vpn/core/models.dart';
+import 'package:merged_vpn/core/tun_service.dart';
+import 'package:merged_vpn/core/updates.dart';
+import 'package:merged_vpn/desktop/close_dialog.dart';
+import 'package:merged_vpn/l10n/app_localizations.dart';
+import 'package:merged_vpn/ui/app.dart';
+import 'package:merged_vpn/ui/settings_page.dart'
     show SettingsGroup, pickProgramFile;
-import 'package:arman_vpn/ui/signin_dialog.dart';
-import 'package:arman_vpn/ui/widgets.dart';
+import 'package:merged_vpn/ui/signin_dialog.dart';
+import 'package:merged_vpn/ui/widgets.dart';
 
 Map<String, Object?> _account(
   String id,

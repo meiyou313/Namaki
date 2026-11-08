@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:arman_vpn/app_info.dart';
-import 'package:arman_vpn/core/updates.dart';
+import 'package:merged_vpn/app_info.dart';
+import 'package:merged_vpn/core/updates.dart';
 
 /// A release server on loopback in GitHub's place: [routes] maps
 /// "METHOD /path" to a status and a body; anything else is 404.
