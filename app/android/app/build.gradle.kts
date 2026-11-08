@@ -37,7 +37,9 @@ android {
     compileOptions {
         // Predator's app enables this for its Java 17 code; keep it so
         // the copied Predator Java files compile the same way.
-        coreLibraryDesugaringEnabled = true
+        // AGP 9's new DSL names this isCoreLibraryDesugaringEnabled;
+        // coreLibraryDesugaringEnabled is an unresolved reference there.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
