@@ -1,0 +1,140 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Merged VPN — Arman Flutter UI + PredatorVPN Go core.
+#
+# Builds the Android APK on GitHub Actions and uploads it as an artifact.
+# It does NOT publish a GitHub release: download the APK from the run's
+# Artifacts (Actions tab > this run > "android").
+#
+# Trigger it with: Actions > Build Android > Run workflow.
+# No signing secrets are needed: without them the APKs are signed with
+# the debug key (like Arman's CI). For a release key, add these secrets:
+#   ANDROID_KEYSTORE_BASE64    the .jks file, base64-encoded
+#   ANDROID_KEYSTORE_PASSWORD  its password (PKCS12: also the key's)
+name: Build Android
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.7
+  GO_VERSION: '1.26.9'
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - name: Go core checks
+        working-directory: predator-core
+        run: |
+          gofmt -l mobile engine
+          go mod tidy
+          go test -timeout 90s ./mobile
+          go vet ./mobile
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Flutter checks
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+
+  android:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Android toolchain
+        run: |
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.0.13004108'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.0.13004108" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        id: native-cache
+        with:
+          path: app/android/app/libs/
+          key: merged-native-go1.26.9-ndk28-${{ hashFiles('predator-core/mobile/**/*.go', 'predator-core/engine/**/*.go', 'predator-core/tools.go', 'predator-core/go.mod', 'predator-core/go.sum') }}
+      - name: Build native Android library (Predator core -> foxvpn.aar)
+        if: steps.native-cache.outputs.cache-hit != 'true'
+        working-directory: predator-core
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.0.13004108
+        run: |
+          go mod tidy
+          go install github.com/sagernet/gomobile/cmd/gomobile
+          go install github.com/sagernet/gomobile/cmd/gobind
+          export PATH="$(go env GOPATH)/bin:$PATH"
+          gomobile init
+          mkdir -p ../app/android/app/libs
+          gomobile bind -v -target android -androidapi 26 \
+            -javapkg=com.foxvpn.nativebridge -libname=foxvpn -trimpath \
+            -tags with_gvisor,with_clash_api,with_conntrack \
+            -ldflags '-X github.com/sagernet/sing-box/constant.Version=1.12.0 -s -w -buildid= -extldflags=-Wl,-z,max-page-size=16384' \
+            -o ../app/android/app/libs/foxvpn.aar ./mobile github.com/sagernet/sing-box/experimental/libbox
+      - uses: actions/cache/save@v4
+        if: steps.native-cache.outputs.cache-hit != 'true'
+        with:
+          path: app/android/app/libs/
+          key: ${{ steps.native-cache.outputs.cache-primary-key }}
+      - name: Bundle dependency notices
+        run: node scripts/android-notices.cjs
+      - name: Release key
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ]; then
+            echo "::warning::no release key: the APKs are signed with a debug key"
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE" | base64 -d > app/android/release.jks
+          printf 'storeFile=../release.jks\nstorePassword=%s\nkeyAlias=release\nkeyPassword=%s\n' "$PASSWORD" "$PASSWORD" > app/android/key.properties
+      - name: Build APKs
+        run: |
+          mkdir -p out
+          cd app
+          flutter pub get
+          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=2.0.0
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/Merged-VPN-2.0.0-Android-$abi.apk"
+          done
+          flutter build apk --release --dart-define=APP_VERSION=2.0.0
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/Merged-VPN-2.0.0-Android-universal.apk
+      - name: Remove the key
+        if: always()
+        run: rm -f app/android/release.jks app/android/key.properties
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/*
+          if-no-files-found: error
