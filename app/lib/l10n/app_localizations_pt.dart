@@ -1,0 +1,1655 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Portuguese (`pt`).
+class AppLocalizationsPt extends AppLocalizations {
+  AppLocalizationsPt([String locale = 'pt']) : super(locale);
+
+  @override
+  String get appTitle => 'Arman VPN';
+
+  @override
+  String get navOverview => 'Visão geral';
+
+  @override
+  String get navAccounts => 'Contas';
+
+  @override
+  String get navSettings => 'Configurações';
+
+  @override
+  String get stateConnected => 'Conectado';
+
+  @override
+  String get stateConnecting => 'Conectando…';
+
+  @override
+  String get stateWaiting => 'Aguardando';
+
+  @override
+  String get waitingForAccount =>
+      'Adicione uma Firefox Account na página Contas para conectar.';
+
+  @override
+  String get waitingForEnabledAccount =>
+      'Todas as contas estão desativadas. Ative uma na página Contas.';
+
+  @override
+  String get stateError => 'Erro';
+
+  @override
+  String get stateUnknown => 'Desconhecido';
+
+  @override
+  String get restartProxy => 'Reiniciar o proxy';
+
+  @override
+  String copied(String value) {
+    return '$value copiado';
+  }
+
+  @override
+  String get activeAccount => 'Conta ativa';
+
+  @override
+  String get noActiveAccount => 'Nenhuma conta ativa';
+
+  @override
+  String get quotaNotRead => 'Franquia ainda não verificada';
+
+  @override
+  String get unlimited => 'Ilimitado';
+
+  @override
+  String usedOf(String used, String limit) {
+    return '$used de $limit usados';
+  }
+
+  @override
+  String resets(String date) {
+    return 'zera em $date';
+  }
+
+  @override
+  String switchAt(int percent) {
+    return 'Troca de conta em $percent%';
+  }
+
+  @override
+  String get publicIp => 'IP público';
+
+  @override
+  String get testConnection => 'Testar conexão';
+
+  @override
+  String get testing => 'Testando…';
+
+  @override
+  String get testFailed => 'Falhou';
+
+  @override
+  String milliseconds(int value) {
+    return '$value ms';
+  }
+
+  @override
+  String get justNow => 'agora mesmo';
+
+  @override
+  String minutesAgo(int n) {
+    return 'há $n min';
+  }
+
+  @override
+  String hoursAgo(int n) {
+    return 'há $n h';
+  }
+
+  @override
+  String daysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'há $count dias',
+      one: 'há 1 dia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String atTime(String time) {
+    return 'às $time';
+  }
+
+  @override
+  String durationDays(int d, int h) {
+    return '${d}d ${h}h';
+  }
+
+  @override
+  String durationHours(int h, int m) {
+    return '${h}h ${m}min';
+  }
+
+  @override
+  String durationMinutes(int m, int s) {
+    return '${m}min ${s}s';
+  }
+
+  @override
+  String durationSeconds(int s) {
+    return '${s}s';
+  }
+
+  @override
+  String accountsGuide(String size) {
+    return 'Cada Firefox Account tem $size de franquia por mês. Você pode adicionar várias: quando uma acaba, o app passa sozinho para a próxima.';
+  }
+
+  @override
+  String accountsOrderNote(int percent) {
+    return 'Na ordem desta lista: cada uma até $percent%, a última até acabarem os dados.';
+  }
+
+  @override
+  String get addAccount => 'Adicionar conta';
+
+  @override
+  String lowQuotaNotice(String size) {
+    return 'A franquia desta conta está acabando. Adicione outra conta para ter mais $size.';
+  }
+
+  @override
+  String get noAccounts => 'Nenhuma conta ainda';
+
+  @override
+  String get noAccountsHint => 'Adicione uma Firefox Account para conectar.';
+
+  @override
+  String get delayTestFailed =>
+      'Não foi possível medir o atraso dos servidores. Verifique sua internet.';
+
+  @override
+  String get createAccountTitle => 'Não tem uma Firefox Account?';
+
+  @override
+  String get createAccountHint =>
+      'Crie uma grátis em accounts.firefox.com, depois volte e toque em Adicionar conta.';
+
+  @override
+  String get moveUp => 'Mover para cima';
+
+  @override
+  String get moveDown => 'Mover para baixo';
+
+  @override
+  String get statusActive => 'Ativa';
+
+  @override
+  String get statusReady => 'Pronta';
+
+  @override
+  String get statusNeedsSignIn => 'Requer login';
+
+  @override
+  String get statusReserved => 'Reservada';
+
+  @override
+  String get statusUnavailable => 'Indisponível';
+
+  @override
+  String statusUnavailableUntil(String date) {
+    return 'Indisponível até $date';
+  }
+
+  @override
+  String get statusDisabled => 'Desativada';
+
+  @override
+  String get statusEnabled => 'Ativada';
+
+  @override
+  String get useNow => 'Usar agora';
+
+  @override
+  String get signInAgain => 'Entrar novamente';
+
+  @override
+  String reasonQuotaThreshold(int percent) {
+    return 'Esta conta usou $percent% dos dados, então a próxima assumiu.';
+  }
+
+  @override
+  String get reasonQuotaExhausted =>
+      'A franquia deste mês acabou; volta a ser usada após a renovação mensal.';
+
+  @override
+  String get reasonSignInRequired => 'Entre de novo para usar esta conta.';
+
+  @override
+  String get reasonSignInConfirm =>
+      'A Mozilla pede para confirmar o login: toque em «Entrar novamente» (só o código é necessário).';
+
+  @override
+  String reasonSignInFailed(String detail) {
+    return 'O login automático falhou ($detail). Entre de novo.';
+  }
+
+  @override
+  String reasonSignInWait(String time) {
+    return 'O último login automático parou de funcionar logo depois; a próxima tentativa é às $time.';
+  }
+
+  @override
+  String reasonSignInRetry(String detail, String time) {
+    return 'O login automático não terminou ($detail); nova tentativa às $time.';
+  }
+
+  @override
+  String get reasonNotEntitled =>
+      'A Mozilla recusou esta conta; nova tentativa mais tarde.';
+
+  @override
+  String get more => 'Mais';
+
+  @override
+  String get refreshQuota => 'Atualizar franquia';
+
+  @override
+  String get remove => 'Remover';
+
+  @override
+  String get removeTitle => 'Remover conta?';
+
+  @override
+  String removeBody(String name) {
+    return '$name e o login salvo serão removidos deste computador. Você pode adicioná-la novamente depois.';
+  }
+
+  @override
+  String get unlimitedQuota => 'Franquia ilimitada';
+
+  @override
+  String get signInTitle => 'Entrar';
+
+  @override
+  String get signInIntro => 'Entre com uma Firefox Account.';
+
+  @override
+  String get email => 'E-mail';
+
+  @override
+  String get emailInvalid => 'Digite o e-mail da conta';
+
+  @override
+  String get password => 'Senha';
+
+  @override
+  String get passwordEmpty => 'Digite a senha';
+
+  @override
+  String get show => 'Mostrar';
+
+  @override
+  String get hide => 'Ocultar';
+
+  @override
+  String get signIn => 'Entrar';
+
+  @override
+  String get continueLabel => 'Continuar';
+
+  @override
+  String get done => 'Concluído';
+
+  @override
+  String get close => 'Fechar';
+
+  @override
+  String get noBrowserTitle => 'Não há navegador neste dispositivo';
+
+  @override
+  String get noBrowserText =>
+      'Abra este endereço no seu celular ou computador:';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get tryAgain => 'Tentar novamente';
+
+  @override
+  String get signingIn => 'Entrando…';
+
+  @override
+  String get accountReady => 'Conta pronta';
+
+  @override
+  String get accountReadyHint => 'Ela foi adicionada ao final da lista.';
+
+  @override
+  String get captchaLabel => 'Caracteres da imagem';
+
+  @override
+  String get codeLabel => 'Código';
+
+  @override
+  String get captchaBroken => 'Não foi possível mostrar a imagem do CAPTCHA.';
+
+  @override
+  String stepEmailCode(String email) {
+    return 'A Mozilla enviou um código para $email. Digite-o aqui.';
+  }
+
+  @override
+  String get stepTotp => 'Digite o código do seu app autenticador.';
+
+  @override
+  String stepUnblockCode(String email) {
+    return 'A Mozilla considerou este login incomum e enviou um código de desbloqueio para $email. Digite-o aqui.';
+  }
+
+  @override
+  String get stepCaptcha => 'Digite os caracteres da imagem.';
+
+  @override
+  String stepEmailLink(String email) {
+    return 'Abra o link de confirmação que a Mozilla enviou para $email. O app continua automaticamente.';
+  }
+
+  @override
+  String get signInFailed => 'A conta não foi adicionada.';
+
+  @override
+  String get signInCancelled => 'Entrada cancelada.';
+
+  @override
+  String get signInNoAccount => 'Não existe Firefox Account com este e-mail.';
+
+  @override
+  String get signInNoAccountHint =>
+      'Confira o e-mail, ou crie com ele uma Firefox Account gratuita no site da Mozilla, confirme-a pela sua caixa de entrada e depois adicione-a aqui.';
+
+  @override
+  String get createAccountButton => 'Criar uma Firefox Account';
+
+  @override
+  String get signInWrongPassword => 'Senha incorreta.';
+
+  @override
+  String get signInNoPassword =>
+      'Esta conta não tem senha: foi criada com o login do Google ou da Apple. Defina uma senha e depois entre aqui com ela.';
+
+  @override
+  String get setPasswordButton => 'Definir senha';
+
+  @override
+  String get signInTooManyAttempts =>
+      'Tentativas demais. Aguarde um pouco e tente de novo.';
+
+  @override
+  String get signInUnblockRejected =>
+      'O código de desbloqueio não foi aceito. Use o código do e-mail mais recente da Mozilla.';
+
+  @override
+  String get signInWrongCode =>
+      'Código errado ou expirado. Use o código do e-mail mais recente da Mozilla; um código antigo para de funcionar quando um novo é enviado.';
+
+  @override
+  String get signInWrongTotp =>
+      'Código errado. Digite o código que o app autenticador mostra agora.';
+
+  @override
+  String get signInTooManyCodes =>
+      'Códigos errados demais. Comece a entrada de novo.';
+
+  @override
+  String get signInTimedOut => 'A entrada demorou demais. Comece de novo.';
+
+  @override
+  String get signInNetwork =>
+      'Não foi possível alcançar a Mozilla. Verifique sua internet e tente de novo.';
+
+  @override
+  String get coreConnecting => 'Conectando ao núcleo…';
+
+  @override
+  String get coreLost =>
+      'A conexão com o núcleo foi perdida. Tentando novamente…';
+
+  @override
+  String get cantReachCore => 'Não foi possível conectar ao núcleo';
+
+  @override
+  String get startingCore => 'Iniciando o núcleo…';
+
+  @override
+  String get retry => 'Tentar de novo';
+
+  @override
+  String errNoCore(String path) {
+    return 'O núcleo não foi encontrado na pasta do app ($path).';
+  }
+
+  @override
+  String errCoreExited(String detail) {
+    return 'O núcleo parou: $detail';
+  }
+
+  @override
+  String get errNotAnswering => 'O núcleo não está respondendo.';
+
+  @override
+  String get errRefused =>
+      'O núcleo recusou a conexão; talvez ele pertença a outra cópia do app.';
+
+  @override
+  String get settingsTitle => 'Configurações';
+
+  @override
+  String get sectionGeneral => 'Geral';
+
+  @override
+  String get language => 'Idioma';
+
+  @override
+  String get languageSystem => 'Padrão do sistema';
+
+  @override
+  String get theme => 'Tema';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Escuro';
+
+  @override
+  String get closeBehavior => 'Ao fechar a janela';
+
+  @override
+  String get closeAsk => 'Perguntar sempre';
+
+  @override
+  String get closeTray => 'Minimizar para a bandeja';
+
+  @override
+  String get closeQuit => 'Sair do app';
+
+  @override
+  String get sectionConnection => 'Conexão';
+
+  @override
+  String get localProxy => 'Proxy local';
+
+  @override
+  String get systemProxy => 'Proxy do sistema';
+
+  @override
+  String get sectionRouting => 'Roteamento';
+
+  @override
+  String get routingDirect => 'Conexão direta para sites locais';
+
+  @override
+  String get routingDirectHint =>
+      'Sites e IPs do país escolhido não passam pela VPN: abrem mais rápido e não gastam a franquia.';
+
+  @override
+  String get region => 'País';
+
+  @override
+  String get regionIr => 'Irã';
+
+  @override
+  String get regionCn => 'China';
+
+  @override
+  String get regionRu => 'Rússia';
+
+  @override
+  String get regionAf => 'Afeganistão';
+
+  @override
+  String get regionTr => 'Turquia';
+
+  @override
+  String get regionId => 'Indonésia';
+
+  @override
+  String get regionBr => 'Brasil';
+
+  @override
+  String get regionNone => 'Nenhum';
+
+  @override
+  String get saved => 'Salvo';
+
+  @override
+  String get dataFolder => 'Pasta de dados';
+
+  @override
+  String get openFolder => 'Abrir pasta';
+
+  @override
+  String get unofficialNote =>
+      'Cliente não oficial. Sem vínculo com a Mozilla.';
+
+  @override
+  String get closeTitle => 'Fechar a janela?';
+
+  @override
+  String get closeBody =>
+      'Minimizada na bandeja, a VPN continua conectada. Ao sair, ela é desligada.';
+
+  @override
+  String get rememberChoice => 'Lembrar minha escolha';
+
+  @override
+  String get minimizeToTray => 'Minimizar para a bandeja';
+
+  @override
+  String get quit => 'Sair';
+
+  @override
+  String get trayOpen => 'Abrir';
+
+  @override
+  String get trayQuit => 'Sair';
+
+  @override
+  String get trayProxyOnly => 'Somente serviço de proxy';
+
+  @override
+  String get traySetSystemProxy => 'Definir proxy do sistema';
+
+  @override
+  String errPortInUse(String port) {
+    return 'A porta $port está sendo usada por outro programa, por isso o app não consegue se conectar ao núcleo.';
+  }
+
+  @override
+  String proxyPortInUse(String port) {
+    return 'A porta $port está sendo usada por outro programa, por isso o proxy não consegue iniciar.';
+  }
+
+  @override
+  String get changePort => 'Trocar porta';
+
+  @override
+  String get portDialogTitle => 'Escolha uma porta';
+
+  @override
+  String portDialogBody(String port) {
+    return 'A porta $port está ocupada. Uma porta livre é sugerida abaixo; você pode digitar outra.';
+  }
+
+  @override
+  String get portChangeBody =>
+      'Os apps se conectam a esta porta. Escolha uma entre 1024 e 65535.';
+
+  @override
+  String get portLabel => 'Porta';
+
+  @override
+  String get portInvalid => 'Digite uma porta de 1024 a 65535';
+
+  @override
+  String get portBusy => 'Esta porta também está em uso';
+
+  @override
+  String get portInUse => 'Outro programa usa esta porta';
+
+  @override
+  String get save => 'Salvar';
+
+  @override
+  String get proxyPort => 'Porta do proxy';
+
+  @override
+  String get appPort => 'Porta do app';
+
+  @override
+  String get welcomeTitle => 'Boas-vindas';
+
+  @override
+  String get welcomeBody =>
+      'Escolha seu idioma e seu país. Os sites do seu país abrem diretamente, sem a VPN: mais rápido e sem gastar a franquia.';
+
+  @override
+  String get start => 'Começar';
+
+  @override
+  String routingSuggestTitle(String country) {
+    return '$country: abrir sites diretamente?';
+  }
+
+  @override
+  String routingSuggestBody(String country) {
+    return 'Sites e IPs do país escolhido ($country) abririam diretamente, sem a VPN. Você pode mudar isso em Roteamento.';
+  }
+
+  @override
+  String get yes => 'Sim';
+
+  @override
+  String get notNow => 'Agora não';
+
+  @override
+  String get navServers => 'Servidores';
+
+  @override
+  String get navLogs => 'Logs';
+
+  @override
+  String get realDelay => 'Latência real';
+
+  @override
+  String noticePort(String port) {
+    return 'O proxy da Mozilla não se conecta à porta $port. Apenas as portas 80, 443, 8080 e 8443 passam pela VPN.';
+  }
+
+  @override
+  String get noticeCommand =>
+      'Este tipo de conexão não é compatível com a VPN.';
+
+  @override
+  String noticeTimes(int count, String time) {
+    return '$count vezes, última às $time';
+  }
+
+  @override
+  String get dismiss => 'Dispensar';
+
+  @override
+  String get modeRecommended => 'Recomendado';
+
+  @override
+  String get modeFastest => 'Mais rápido';
+
+  @override
+  String get modeRecommendedHint => 'A Mozilla escolhe o local para você.';
+
+  @override
+  String get modeFastestHint => 'O local com menor latência a cada conexão.';
+
+  @override
+  String get testDelay => 'Testar latência real';
+
+  @override
+  String get testingDelay => 'Testando… isso pode levar um minuto';
+
+  @override
+  String get search => 'Pesquisar';
+
+  @override
+  String get noAnswer => 'Sem resposta';
+
+  @override
+  String testedAgo(String ago) {
+    return 'Testado $ago';
+  }
+
+  @override
+  String delaySummary(int answered, int total) {
+    return '$answered de $total responderam';
+  }
+
+  @override
+  String get noServers =>
+      'Nenhum servidor ainda. Eles aparecem assim que o núcleo se conectar à Mozilla.';
+
+  @override
+  String get levelAll => 'Todos';
+
+  @override
+  String get filter => 'Filtrar';
+
+  @override
+  String get follow => 'Rolagem automática';
+
+  @override
+  String get clear => 'Limpar';
+
+  @override
+  String get copyAll => 'Copiar';
+
+  @override
+  String get logsCopied => 'Logs copiados';
+
+  @override
+  String get noLogs => 'Nenhuma linha de log ainda.';
+
+  @override
+  String get sectionAccounts => 'Troca automática de conta';
+
+  @override
+  String get switchThreshold => 'Trocar de conta em';
+
+  @override
+  String get switchThresholdHint =>
+      'A próxima conta assume quando esta porcentagem da franquia for consumida.';
+
+  @override
+  String get signInMethod => 'Método de login';
+
+  @override
+  String get signInMethodBrowser => 'Entrar pelo navegador';
+
+  @override
+  String get signInMethodApi => 'Entrar diretamente';
+
+  @override
+  String get browserSignInBroken => 'Não foi possível abrir a página de login.';
+
+  @override
+  String get browserSignInBlocked =>
+      'A Mozilla não concluiu a última etapa para adicionar a conta (HTTP 406).';
+
+  @override
+  String get browserSignInFallback => 'Entrar com e-mail e senha';
+
+  @override
+  String get backupExport => 'Salvar backup';
+
+  @override
+  String get backupImport => 'Importar backup';
+
+  @override
+  String backupSaved(String name) {
+    return 'Salvo: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Adicionar estas contas?';
+
+  @override
+  String get backupAccountExists => 'Já adicionada; o login virá do arquivo';
+
+  @override
+  String get backupImportAction => 'Adicionar';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contas adicionadas',
+      one: '1 conta adicionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sectionDns => 'DNS';
+
+  @override
+  String get dnsPreset => 'Servidores DNS';
+
+  @override
+  String get dnsSystem => 'Sistema';
+
+  @override
+  String get dnsAuto => 'Automático (Cloudflare, Google, Quad9)';
+
+  @override
+  String get dnsCustom => 'Personalizado';
+
+  @override
+  String get dnsCustomHint =>
+      'Um por linha: https://…/dns-query, tls://… ou um endereço IP.';
+
+  @override
+  String get dnsFallback => 'Usar o DNS do sistema como alternativa';
+
+  @override
+  String get testDns => 'Testar DNS';
+
+  @override
+  String get transport => 'Protocolo';
+
+  @override
+  String get transportH3 => 'HTTP/3 (QUIC)';
+
+  @override
+  String get ipVersion => 'Versão do IP';
+
+  @override
+  String get ipVersionAuto => 'Automático (IPv4 primeiro, depois IPv6)';
+
+  @override
+  String get ipVersionDual => 'Ambos ao mesmo tempo (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'IPv6 primeiro, depois IPv4';
+
+  @override
+  String get ipVersionV4 => 'Somente IPv4';
+
+  @override
+  String get ipVersionV6 => 'Somente IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'Tamanho do pacote da interface VPN, de 1280 a 9000. Vazio: automático.';
+
+  @override
+  String get tunMtuInvalid => 'Um número de 1280 a 9000, ou vazio';
+
+  @override
+  String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
+
+  @override
+  String get directRules => 'Direto';
+
+  @override
+  String get directRulesHint =>
+      'Os sites e endereços desta lista abrem sem a VPN, direto pela sua própria internet. As regras do país escolhido já estão aqui: adicione, altere ou remova linhas. Escolher outro país as substitui pelas dele.';
+
+  @override
+  String get restoreRegionRules => 'Restaurar as regras do país';
+
+  @override
+  String get blockRules => 'Bloquear';
+
+  @override
+  String get blockRulesHint =>
+      'Os sites e endereços desta lista não abrem de jeito nenhum, nem direto nem pela VPN: para anúncios ou sites que você nunca quer acessar.';
+
+  @override
+  String get rulesTitle => 'Regras';
+
+  @override
+  String get ruleSyntaxTitle => 'Como escrever uma regra';
+
+  @override
+  String get resolveDomains => 'Aplicar regras de IP aos domínios';
+
+  @override
+  String get routingLists => 'Arquivos geo';
+
+  @override
+  String get listSource => 'Origem das listas';
+
+  @override
+  String get listSourceCustom => 'Definido manualmente';
+
+  @override
+  String listsUpdatedAgo(String ago) {
+    return 'Atualizado $ago';
+  }
+
+  @override
+  String get updateLists => 'Atualizar os arquivos geo';
+
+  @override
+  String get listsUpdated => 'Os arquivos geo foram atualizados.';
+
+  @override
+  String get testDestination => 'Testar a rota de um site';
+
+  @override
+  String get destinationHint => 'Um nome, um endereço ou uma URL';
+
+  @override
+  String get check => 'Verificar';
+
+  @override
+  String get routeDirect => 'Vai direto';
+
+  @override
+  String get routeProxy => 'Passa pela VPN';
+
+  @override
+  String get routeBlock => 'Bloqueado';
+
+  @override
+  String ruleMatched(String rule) {
+    return 'Regra: $rule';
+  }
+
+  @override
+  String get portRefusedNote =>
+      'O proxy da Mozilla não se conecta a esta porta.';
+
+  @override
+  String get sectionAdvanced => 'Avançado';
+
+  @override
+  String get tlsFragment => 'Fragmentação TLS';
+
+  @override
+  String get tlsFragmentOff => 'Desativado';
+
+  @override
+  String get tlsFragmentFirstByte => 'Primeiro byte';
+
+  @override
+  String get tlsFragmentSni => 'Nome do servidor (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Divide o cabeçalho TLS no primeiro byte (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Divide o nome do servidor (SNI) em vários pacotes TCP';
+
+  @override
+  String get tlsFragmentRecord => 'Registro TLS';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Divide o nome do servidor (SNI) em dois registros TLS';
+
+  @override
+  String get tlsFragmentOffHint => 'Conexão TLS normal';
+
+  @override
+  String get sectionBypass => 'Se a Mozilla estiver bloqueada';
+
+  @override
+  String get apiRelay => 'Servidor de retransmissão';
+
+  @override
+  String get apiRelayUse => 'Usar o servidor de retransmissão';
+
+  @override
+  String get apiRelayHint =>
+      'Seu próprio Cloudflare Worker, ou relay.php na sua própria hospedagem.\nUsado só quando a Mozilla não responde diretamente: o login, as contas e a lista de servidores passam por ele, não o tráfego da VPN.';
+
+  @override
+  String get upstreamProxy => 'Proxy upstream';
+
+  @override
+  String get upstreamProxyOn => 'Proxy upstream ativado';
+
+  @override
+  String get upstreamProxyAddress => 'Endereço SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'Porta';
+
+  @override
+  String get upstreamProxyHint =>
+      'A conexão com a Mozilla passa por este proxy, para redes que bloqueiam ou deixam a Mozilla lenta.\nSe o proxy roda neste dispositivo, deixe-o fora da VPN.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Digite o endereço do proxy, como 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'Digite uma porta de 1 a 65535.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Esse é o proxy do próprio aplicativo. Digite outro.';
+
+  @override
+  String get apiRelayInvalid => 'Deve ser um endereço https://.';
+
+  @override
+  String get listenAddress => 'Acesso ao proxy';
+
+  @override
+  String get listenLocal => '127.0.0.1 · somente este dispositivo';
+
+  @override
+  String get listenAll => '0.0.0.0 · todas as redes (LAN)';
+
+  @override
+  String get proxyUsername => 'Usuário do proxy';
+
+  @override
+  String get proxyPassword => 'Senha do proxy';
+
+  @override
+  String get proxyLoginHint =>
+      'Os apps terão que usar este usuário e senha. Deixe os dois em branco para não exigir senha.';
+
+  @override
+  String get loginBothOrNone => 'Preencha os dois ou deixe os dois vazios.';
+
+  @override
+  String get proxyLogin => 'Usuário e senha do proxy';
+
+  @override
+  String get idleSleep => 'Pausar após inatividade de';
+
+  @override
+  String get sleepNever => 'Nunca';
+
+  @override
+  String sleepMinutes(int count) {
+    return '$count minutos';
+  }
+
+  @override
+  String get sleepHour => '1 hora';
+
+  @override
+  String get showPublicIp => 'Mostrar o IP público';
+
+  @override
+  String get speedInNotification => 'Mostrar a velocidade na notificação';
+
+  @override
+  String get liveTraffic => 'Tráfego ao vivo';
+
+  @override
+  String get totalTraffic => 'Tráfego total';
+
+  @override
+  String get verboseLogs => 'Logs detalhados';
+
+  @override
+  String get webDashboard => 'Painel web';
+
+  @override
+  String get webDashboardOpen => 'Abrir';
+
+  @override
+  String get webDashboardHint => 'Configurações avançadas e mais ferramentas';
+
+  @override
+  String numberInvalid(int min, int max) {
+    return 'Digite um número de $min a $max';
+  }
+
+  @override
+  String get notifySwitchedTitle => 'Conta trocada';
+
+  @override
+  String notifySwitchedBody(String name) {
+    return 'Usando agora $name.';
+  }
+
+  @override
+  String get notifySignInTitle => 'Login necessário';
+
+  @override
+  String get notifySignInBody =>
+      'Uma conta precisa fazer login novamente. Abra a página Contas.';
+
+  @override
+  String get navAbout => 'Sobre';
+
+  @override
+  String get appVersionLabel => 'Versão do app';
+
+  @override
+  String get coreVersionLabel => 'Versão do núcleo';
+
+  @override
+  String get checkUpdates => 'Verificar atualizações';
+
+  @override
+  String get checkingUpdates => 'Verificando…';
+
+  @override
+  String get upToDate => 'Você tem a versão mais recente.';
+
+  @override
+  String updateAvailable(String version) {
+    return 'A versão $version está disponível.';
+  }
+
+  @override
+  String get download => 'Baixar';
+
+  @override
+  String updateCheckFailed(String error) {
+    return 'Não foi possível verificar atualizações: $error';
+  }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'Não foi possível acessar o GitHub. Verifique sua conexão com a internet e tente novamente.';
+
+  @override
+  String get updateNow => 'Atualizar';
+
+  @override
+  String updateDownloading(String version) {
+    return 'Baixando a versão $version…';
+  }
+
+  @override
+  String updateReady(String version) {
+    return 'A versão $version está pronta para instalar.';
+  }
+
+  @override
+  String updateInstalling(String version) {
+    return 'Instalando a versão $version. O app vai fechar e abrir de novo.';
+  }
+
+  @override
+  String updateFailed(String version) {
+    return 'Não foi possível atualizar para a versão $version.';
+  }
+
+  @override
+  String updateDone(String version) {
+    return 'Atualizado para a versão $version.';
+  }
+
+  @override
+  String updateRolledBack(String version) {
+    return 'A atualização para a versão $version não terminou, então o app voltou para a versão anterior.';
+  }
+
+  @override
+  String get repoNotSet => 'O repositório do GitHub ainda não foi definido.';
+
+  @override
+  String get sourceCode => 'Código-fonte';
+
+  @override
+  String get tapToConnect => 'Clique para conectar';
+
+  @override
+  String get tapToDisconnect => 'Clique para desconectar';
+
+  @override
+  String get startOnBoot => 'Iniciar com o sistema';
+
+  @override
+  String get connectOnStartup => 'Conectar ao iniciar o sistema';
+
+  @override
+  String get proxyServiceActive => 'Serviço de proxy ativo';
+
+  @override
+  String get navHome => 'Início';
+
+  @override
+  String get groupApp => 'App';
+
+  @override
+  String get groupNetwork => 'Rede';
+
+  @override
+  String get stateOff => 'Desconectado';
+
+  @override
+  String get tapToConnectPhone => 'Toque para conectar';
+
+  @override
+  String get tapToDisconnectPhone => 'Toque para desconectar';
+
+  @override
+  String get tapToConnectTv => 'Pressione OK para conectar';
+
+  @override
+  String get tapToDisconnectTv => 'Pressione OK para desconectar';
+
+  @override
+  String lanAddress(String address) {
+    return 'LAN $address';
+  }
+
+  @override
+  String get recommendedLocation => 'Local recomendado';
+
+  @override
+  String dataLeftOf(String limit) {
+    return 'de $limit';
+  }
+
+  @override
+  String get homeLocation => 'Local';
+
+  @override
+  String get connectedTo => 'Conectado a';
+
+  @override
+  String get vpnNotAllowed =>
+      'A VPN precisa da sua permissão. Toque no botão de novo e permita.';
+
+  @override
+  String get dataUsedTitle => 'Dados usados';
+
+  @override
+  String get bypassApps => 'Proxy por app';
+
+  @override
+  String get connectRetrying =>
+      'Não foi possível conectar. Verifique sua internet.';
+
+  @override
+  String get failUnreachable =>
+      'Não foi possível alcançar os servidores da Mozilla. Tente outra conexão de internet.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Não foi possível alcançar a Mozilla pelo proxy upstream. Verifique se ele está em execução.';
+
+  @override
+  String get failInsideVpn => 'Esta internet já passa por uma VPN. Desative-a.';
+
+  @override
+  String get failRefused =>
+      'O servidor da Mozilla recusou a conexão. Tente de novo em alguns minutos.';
+
+  @override
+  String get failLocationRefused =>
+      'Este país não está disponível para sua conta. Escolha outro país.';
+
+  @override
+  String get useRecommendedLocation => 'Usar o local recomendado';
+
+  @override
+  String exitMismatch(String exit, String chosen) {
+    return 'País escolhido: $chosen. País do seu IP: $exit.';
+  }
+
+  @override
+  String get failSignIn =>
+      'O login desta conta expirou. Entre novamente na página Contas.';
+
+  @override
+  String get failQuota => 'Os dados deste mês acabaram. Adicione outra conta.';
+
+  @override
+  String get failNotEntitled =>
+      'A Mozilla não permite que esta conta use a VPN. Adicione outra conta.';
+
+  @override
+  String get failRegion => 'A Mozilla não oferece o serviço no seu país.';
+
+  @override
+  String get failServer =>
+      'O serviço da Mozilla está com um problema temporário. O app tentará de novo sozinho.';
+
+  @override
+  String get failNoAccount =>
+      'Nenhuma conta está pronta. Abra a página Contas.';
+
+  @override
+  String get failTestSite =>
+      'Conectado ao servidor, mas os sites não abrem. Tente outro país.';
+
+  @override
+  String get failOther => 'Não foi possível conectar. Tente de novo.';
+
+  @override
+  String get failNoInternet =>
+      'Sem internet. Verifique o Wi-Fi ou os dados móveis.';
+
+  @override
+  String get waitingForNetwork => 'Aguardando conexão com a internet…';
+
+  @override
+  String proxyStartFailed(String port) {
+    return 'O proxy não conseguiu iniciar na porta $port. Escolha outra porta.';
+  }
+
+  @override
+  String get connectionSettings => 'Configurações de conexão';
+
+  @override
+  String get appModeExclude => 'Excluir apps selecionados';
+
+  @override
+  String get appModeInclude => 'Somente apps selecionados';
+
+  @override
+  String get appModeExcludeHint =>
+      'Os apps selecionados se conectam diretamente, sem a VPN: por exemplo, apps de banco que recusam endereços estrangeiros.';
+
+  @override
+  String get appModeIncludeHint =>
+      'Apenas os apps selecionados passam pela VPN; os outros se conectam diretamente.';
+
+  @override
+  String fromRegionList(String region) {
+    return 'Sugerido pela lista: $region';
+  }
+
+  @override
+  String get modeProxy => 'Proxy';
+
+  @override
+  String get connectionMode => 'Modo de conexão';
+
+  @override
+  String get modeProxyHint =>
+      'Apenas os apps configurados para usar o proxy passam por ele.';
+
+  @override
+  String get modeSystemProxyHint =>
+      'O Windows e a maioria dos apps passam pelo proxy.';
+
+  @override
+  String get modeSystemProxyHintOther =>
+      'Os navegadores e a maioria dos apps passam pelo proxy.';
+
+  @override
+  String get suggestedApps => 'Apps sugeridos';
+
+  @override
+  String get showSystemApps => 'Mostrar apps do sistema';
+
+  @override
+  String suggestedAdded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count apps sugeridos selecionados',
+      one: '1 app sugerido selecionado',
+      zero: 'Os apps sugeridos já estão selecionados',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSection => 'Automático';
+
+  @override
+  String get locationsSection => 'Locais';
+
+  @override
+  String get dnsSummaryOk => 'O DNS criptografado está funcionando';
+
+  @override
+  String dnsSummaryFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nomes não foram resolvidos',
+      one: '1 nome não foi resolvido',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dnsVia(String server) {
+    return 'via $server';
+  }
+
+  @override
+  String dnsSummaryDiffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'O DNS da sua rede respondeu $count nomes com um endereço de bloqueio. Este app não usa esse DNS para eles.',
+      one: 'O DNS da sua rede respondeu 1 nome com um endereço de bloqueio. Este app não usa esse DNS para ele.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dnsAnswer => 'Resposta:';
+
+  @override
+  String get dnsNetworkAnswer => 'DNS da rede:';
+
+  @override
+  String get dnsFiltered => 'filtrado';
+
+  @override
+  String get rulesSyntaxTitle => 'Uma regra por linha';
+
+  @override
+  String get ruleDomain => 'O site e seus subdomínios';
+
+  @override
+  String get ruleFull => 'Exatamente este nome';
+
+  @override
+  String get ruleKeyword => 'Nomes que contêm a palavra';
+
+  @override
+  String get ruleGeosite => 'Sites de uma tag nos arquivos geo';
+
+  @override
+  String get ruleGeoip => 'Endereços de um país nos arquivos geo';
+
+  @override
+  String get ruleIp => 'Um endereço ou uma rede';
+
+  @override
+  String get modeVpn => 'VPN';
+
+  @override
+  String get modeProxyOnly => 'Somente proxy';
+
+  @override
+  String get noNetwork =>
+      'Sem conexão com a internet. Ative o Wi-Fi ou os dados móveis.';
+
+  @override
+  String get blockAds => 'Bloquear anúncios';
+
+  @override
+  String systemProxyTakenBy(String address) {
+    return 'Outro programa mudou o proxy do sistema para $address, então o tráfego não passa pela VPN.';
+  }
+
+  @override
+  String get systemProxyTakenOff =>
+      'Outro programa desativou o proxy do sistema, então o tráfego não passa pela VPN.';
+
+  @override
+  String get setSystemProxyAgain => 'Configurar de novo';
+
+  @override
+  String get modeTun => 'TUN';
+
+  @override
+  String modeTunHint(String os) {
+    return 'Todo o tráfego do $os passa pela VPN.';
+  }
+
+  @override
+  String get osWindows => 'Windows';
+
+  @override
+  String get osLinux => 'Linux';
+
+  @override
+  String get osMacos => 'macOS';
+
+  @override
+  String get tunInstallWaiting =>
+      'Aguardando permissão para instalar o serviço TUN…';
+
+  @override
+  String get tunInstallCancelled =>
+      'O modo TUN precisa de permissão de administrador uma vez. Ela não foi dada, então o modo não mudou.';
+
+  @override
+  String tunInstallFailed(String error) {
+    return 'Não foi possível instalar o serviço TUN: $error';
+  }
+
+  @override
+  String get tunStarting => 'Iniciando o modo TUN…';
+
+  @override
+  String get tunFailed => 'O modo TUN não pôde iniciar. Tentando de novo…';
+
+  @override
+  String get tunLost => 'O modo TUN parou inesperadamente. Tentando de novo…';
+
+  @override
+  String get tunNotRunning =>
+      'O serviço TUN não está em execução. Tentando de novo…';
+
+  @override
+  String get tunMissing => 'O serviço TUN não está instalado.';
+
+  @override
+  String get tunOutdated =>
+      'O serviço TUN é mais antigo que este app. Instale-o de novo para usar o modo TUN.';
+
+  @override
+  String get tunAppOutdated =>
+      'O serviço TUN é mais novo que este app. Atualize o app para usar o modo TUN.';
+
+  @override
+  String get tunBusy => 'Outra cópia do Arman VPN está usando o modo TUN.';
+
+  @override
+  String get tunNoDriver =>
+      'O driver TUN do sistema não está disponível. Reinicie o computador e tente novamente.';
+
+  @override
+  String get tunInstall => 'Instalar';
+
+  @override
+  String get tunInstallAgain => 'Instalar de novo';
+
+  @override
+  String get trayTunMode => 'Modo TUN (todos os apps)';
+
+  @override
+  String get removeTunService => 'Remover o serviço TUN';
+
+  @override
+  String get removeTunServiceHint =>
+      'Remove o serviço do sistema que o modo TUN usa. Escolher TUN de novo o instala outra vez.';
+
+  @override
+  String get tunServiceRemoved => 'O serviço TUN foi removido.';
+
+  @override
+  String get tunInstallPrompt =>
+      'O Arman VPN quer instalar o serviço do modo TUN.';
+
+  @override
+  String get tunRemovePrompt =>
+      'O Arman VPN quer remover o serviço do modo TUN.';
+
+  @override
+  String tunRemoveFailed(String error) {
+    return 'Não foi possível remover o serviço TUN: $error';
+  }
+
+  @override
+  String get sectionTun => 'Configurações de TUN';
+
+  @override
+  String get tunPrograms => 'Programas fora da VPN';
+
+  @override
+  String get tunProgramsHint =>
+      'Eles se conectam diretamente, não pela Mozilla. Só para programas que funcionam sem VPN.';
+
+  @override
+  String get tunProgramsEmpty => 'Nenhum programa ainda.';
+
+  @override
+  String get addProgram => 'Adicionar programa';
+
+  @override
+  String get programFiles => 'Programas';
+
+  @override
+  String get tunProgramAll => 'Todo o tráfego';
+
+  @override
+  String get tunProgramAllHint => 'O programa inteiro se conecta diretamente.';
+
+  @override
+  String get tunProgramUdp => 'Só UDP';
+
+  @override
+  String get tunProgramUdpHint =>
+      'Só o UDP dele se conecta diretamente; o resto passa pela VPN.';
+
+  @override
+  String get udpNoticeSetting => 'Aviso de UDP bloqueado';
+
+  @override
+  String udpNoticeBody(String program) {
+    return 'O tráfego UDP de $program não passa pela VPN.';
+  }
+
+  @override
+  String get dontShowAgain => 'Não mostrar de novo';
+
+  @override
+  String get addRunningProgram => 'Dos programas em execução';
+
+  @override
+  String get addProgramFile => 'Escolher um arquivo…';
+
+  @override
+  String get addProgramName => 'Digitar um nome…';
+
+  @override
+  String get programNameHint =>
+      'O nome do arquivo de um programa, como steam.exe; * significa qualquer texto (steam* são todos os programas do Steam).';
+
+  @override
+  String get runningProgramsEmpty => 'Nenhum outro programa está em execução.';
+
+  @override
+  String get tabLog => 'Log';
+
+  @override
+  String get tabConnections => 'Conexões';
+
+  @override
+  String get connectionsEmpty => 'Ainda não há conexões.';
+
+  @override
+  String connectionsOpen(int count) {
+    return '$count abertas';
+  }
+
+  @override
+  String get connTime => 'Hora';
+
+  @override
+  String get connRoute => 'Regra';
+
+  @override
+  String get connDestination => 'Destino';
+
+  @override
+  String get connInbound => 'Entrada';
+
+  @override
+  String get connProtocol => 'Protocolo';
+
+  @override
+  String get connColumns => 'Colunas';
+
+  @override
+  String get connTraffic => 'Tráfego';
+
+  @override
+  String get connDuration => 'Duração';
+
+  @override
+  String get connRouteVpn => 'Proxy';
+
+  @override
+  String get connRouteDirect => 'Direto';
+
+  @override
+  String get connRouteBlocked => 'Bloqueado';
+
+  @override
+  String get connRoutePort => 'Porta recusada';
+
+  @override
+  String get connRouteFailed => 'Falhou';
+}

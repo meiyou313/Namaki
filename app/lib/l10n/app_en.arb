@@ -1,0 +1,1020 @@
+{
+  "@@locale": "en",
+  "appTitle": "Merged VPN",
+  "navOverview": "Overview",
+  "navAccounts": "Accounts",
+  "navSettings": "Settings",
+  "stateConnected": "Connected",
+  "stateConnecting": "Connecting…",
+  "stateWaiting": "Waiting",
+  "waitingForAccount": "Add a Firefox Account on the Accounts page to connect.",
+  "waitingForEnabledAccount": "All accounts are turned off. Turn one on in Accounts.",
+  "@waitingForEnabledAccount": {
+    "description": "Home hint while the proxy waits: accounts exist, but every one is turned off."
+  },
+  "stateError": "Error",
+  "stateUnknown": "Unknown",
+  "restartProxy": "Restart the proxy",
+  "copied": "Copied {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "activeAccount": "Active account",
+  "noActiveAccount": "No active account",
+  "quotaNotRead": "Quota not read yet",
+  "unlimited": "Unlimited",
+  "usedOf": "{used} of {limit} used",
+  "@usedOf": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "resets": "resets {date}",
+  "@resets": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "switchAt": "Switches account at {percent}%",
+  "@switchAt": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "publicIp": "Public IP",
+  "testConnection": "Test connection",
+  "testing": "Testing…",
+  "testFailed": "Failed",
+  "milliseconds": "{value} ms",
+  "@milliseconds": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "justNow": "just now",
+  "minutesAgo": "{n} min ago",
+  "hoursAgo": "{n} h ago",
+  "daysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "atTime": "at {time}",
+  "@atTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "durationDays": "{d}d {h}h",
+  "@durationDays": {
+    "placeholders": {
+      "d": {
+        "type": "int"
+      },
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{h}h {m}m",
+  "@durationHours": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{m}m {s}s",
+  "@durationMinutes": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      },
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "durationSeconds": "{s}s",
+  "@durationSeconds": {
+    "placeholders": {
+      "s": {
+        "type": "int"
+      }
+    }
+  },
+  "accountsGuide": "Each Firefox Account has {size} of data a month. You can add several: when one runs out, the app moves to the next one by itself.",
+  "accountsOrderNote": "In the order of this list: each up to {percent}%, the last one until its data runs out.",
+  "@accountsGuide": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "@accountsOrderNote": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "addAccount": "Add account",
+  "lowQuotaNotice": "This account is running out of data. Add another account to get {size} more.",
+  "@lowQuotaNotice": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "noAccounts": "No accounts yet",
+  "noAccountsHint": "Add a Firefox Account to connect.",
+  "delayTestFailed": "Couldn't measure the servers' delay. Check your internet.",
+  "createAccountTitle": "Don't have a Firefox Account?",
+  "createAccountHint": "Create one for free at accounts.firefox.com, then come back and press Add account.",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "statusActive": "Active",
+  "statusReady": "Ready",
+  "statusNeedsSignIn": "Needs sign-in",
+  "statusReserved": "Reserved",
+  "statusUnavailable": "Unavailable",
+  "statusUnavailableUntil": "Unavailable until {date}",
+  "@statusUnavailableUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statusDisabled": "Disabled",
+  "statusEnabled": "Enabled",
+  "useNow": "Use now",
+  "signInAgain": "Sign in again",
+  "reasonQuotaThreshold": "Used {percent}% of its data, so the next account took over.",
+  "@reasonQuotaThreshold": {
+    "description": "An account set aside at the switch threshold (percent, the setting) while the next account is used.",
+    "placeholders": {"percent": {"type": "int"}}
+  },
+  "reasonQuotaExhausted": "This month's data is used up; it is used again after the monthly reset.",
+  "reasonSignInRequired": "Sign in again to use this account.",
+  "reasonSignInConfirm": "Mozilla asks to confirm the sign-in: press Sign in again (only the code is needed).",
+  "reasonSignInFailed": "Automatic sign-in failed ({detail}). Sign in again.",
+  "@reasonSignInFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonSignInWait": "The last automatic sign-in stopped working soon after; the next try is at {time}.",
+  "@reasonSignInWait": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonSignInRetry": "Automatic sign-in could not finish ({detail}); trying again at {time}.",
+  "@reasonSignInRetry": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reasonNotEntitled": "Mozilla refused this account; trying again later.",
+  "more": "More",
+  "refreshQuota": "Refresh quota",
+  "remove": "Remove",
+  "removeTitle": "Remove account?",
+  "removeBody": "{name} and its saved sign-in will be removed from this computer. You can add it again later.",
+  "@removeBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unlimitedQuota": "Unlimited quota",
+  "signInTitle": "Sign in",
+  "signInIntro": "Sign in with a Firefox Account.",
+  "email": "Email",
+  "emailInvalid": "Enter the account email",
+  "password": "Password",
+  "passwordEmpty": "Enter the password",
+  "show": "Show",
+  "hide": "Hide",
+  "signIn": "Sign in",
+  "continueLabel": "Continue",
+  "done": "Done",
+  "close": "Close",
+  "noBrowserTitle": "No browser on this device",
+  "noBrowserText": "Open this address on your phone or computer:",
+  "cancel": "Cancel",
+  "tryAgain": "Try again",
+  "signingIn": "Signing in…",
+  "accountReady": "Account ready",
+  "accountReadyHint": "It joined the end of the account order.",
+  "captchaLabel": "Characters in the image",
+  "codeLabel": "Code",
+  "captchaBroken": "The CAPTCHA image could not be shown.",
+  "stepEmailCode": "Mozilla emailed a code to {email}. Enter it here.",
+  "@stepEmailCode": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "stepTotp": "Enter the code from your authenticator app.",
+  "stepUnblockCode": "Mozilla finds this sign-in unusual and emailed an unblock code to {email}. Enter it here.",
+  "@stepUnblockCode": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "stepCaptcha": "Type the characters in the image.",
+  "stepEmailLink": "Open the confirmation link Mozilla emailed to {email}. This continues by itself.",
+  "@stepEmailLink": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "signInFailed": "The account was not added.",
+  "signInCancelled": "Sign-in cancelled.",
+  "signInNoAccount": "No Firefox Account exists for this email.",
+  "signInNoAccountHint": "Check the email, or create a free Firefox Account with it on Mozilla's site, confirm it from your inbox, then add it here.",
+  "createAccountButton": "Create a Firefox Account",
+  "signInWrongPassword": "Incorrect password.",
+  "signInNoPassword": "This account has no password: it was made with Google or Apple sign-in. Set a password, then sign in here with it.",
+  "@signInNoPassword": {
+    "description": "Sign-in failed: the Firefox Account was made with Google or Apple sign-in and has no password (FxA errno 210)."
+  },
+  "setPasswordButton": "Set a password",
+  "@setPasswordButton": {
+    "description": "Button in place of Try again after signInNoPassword; opens Mozilla's page to set a password."
+  },
+  "signInTooManyAttempts": "Too many attempts. Wait a while and try again.",
+  "signInUnblockRejected": "The unblock code was not accepted. Use the code from the latest email from Mozilla.",
+  "signInWrongCode": "Wrong or expired code. Use the code from the latest email from Mozilla; an older code stops working when a new one is sent.",
+  "signInWrongTotp": "Wrong code. Enter the code the authenticator app shows now.",
+  "signInTooManyCodes": "Too many wrong codes. Start the sign-in again.",
+  "signInTimedOut": "The sign-in took too long. Start it again.",
+  "signInNetwork": "Mozilla could not be reached. Check your internet and try again.",
+  "coreConnecting": "Connecting to the core…",
+  "coreLost": "Lost the connection to the core. Retrying…",
+  "cantReachCore": "Can't reach the core",
+  "startingCore": "Starting the core…",
+  "retry": "Retry",
+  "errNoCore": "The core program was not found next to the app ({path}).",
+  "@errNoCore": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "errCoreExited": "The core stopped: {detail}",
+  "@errCoreExited": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "errNotAnswering": "The core is not answering.",
+  "errRefused": "The core refused the app; it may belong to another copy.",
+  "settingsTitle": "Settings",
+  "sectionGeneral": "General",
+  "language": "Language",
+  "languageSystem": "System default",
+  "theme": "Theme",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "closeBehavior": "When closing the window",
+  "closeAsk": "Ask every time",
+  "closeTray": "Minimize to the tray",
+  "closeQuit": "Quit the app",
+  "sectionConnection": "Connection",
+  "localProxy": "Local proxy",
+  "systemProxy": "System proxy",
+  "sectionRouting": "Routing",
+  "routingDirect": "Direct connection for local sites",
+  "routingDirectHint": "Sites and IPs of the chosen country skip the VPN: they open faster and save quota.",
+  "region": "Country",
+  "regionIr": "Iran",
+  "regionCn": "China",
+  "regionRu": "Russia",
+  "regionAf": "Afghanistan",
+  "regionTr": "Turkey",
+  "regionId": "Indonesia",
+  "regionBr": "Brazil",
+  "regionNone": "None",
+  "saved": "Saved",
+  "dataFolder": "Data folder",
+  "openFolder": "Open folder",
+  "unofficialNote": "Unofficial client. Not affiliated with Mozilla.",
+  "closeTitle": "Close the window?",
+  "closeBody": "In the tray, the VPN stays connected. Quitting turns it off.",
+  "rememberChoice": "Remember my choice",
+  "minimizeToTray": "Minimize to tray",
+  "quit": "Quit",
+  "trayOpen": "Open",
+  "trayQuit": "Quit",
+  "trayProxyOnly": "Proxy service only",
+  "traySetSystemProxy": "Set system proxy",
+  "errPortInUse": "Port {port} is used by another program, so the app cannot reach its core.",
+  "@errPortInUse": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "proxyPortInUse": "Port {port} is used by another program, so the proxy cannot start.",
+  "@proxyPortInUse": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "changePort": "Change port",
+  "portDialogTitle": "Choose a port",
+  "portDialogBody": "Port {port} is taken. A free port is suggested below; you can type another one.",
+  "portChangeBody": "Apps connect to this port. Choose one from 1024 to 65535.",
+  "@portDialogBody": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "portLabel": "Port",
+  "portInvalid": "Enter a port from 1024 to 65535",
+  "portBusy": "This port is in use too",
+  "portInUse": "Another program uses this port",
+  "save": "Save",
+  "proxyPort": "Proxy port",
+  "appPort": "App port",
+  "welcomeTitle": "Welcome",
+  "welcomeBody": "Choose your language and your country. Sites of your country open directly, without the VPN, which is faster and saves quota.",
+  "start": "Start",
+  "routingSuggestTitle": "Route {country} directly?",
+  "@routingSuggestTitle": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "routingSuggestBody": "Sites and IPs of {country} would open directly, without the VPN. You can change this in Routing.",
+  "@routingSuggestBody": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "yes": "Yes",
+  "notNow": "Not now",
+  "navServers": "Servers",
+  "navLogs": "Logs",
+  "realDelay": "Real delay",
+  "noticePort": "Mozilla's proxy does not connect to port {port}. Only ports 80, 443, 8080 and 8443 go through the VPN.",
+  "@noticePort": {
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeCommand": "This type of connection isn't supported by the VPN.",
+  "noticeTimes": "{count} times, last {time}",
+  "@noticeTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dismiss": "Dismiss",
+  "modeRecommended": "Recommended",
+  "modeFastest": "Fastest",
+  "modeRecommendedHint": "Mozilla picks the location for you.",
+  "modeFastestHint": "The location with the lowest delay at each connection.",
+  "testDelay": "Test real delay",
+  "testingDelay": "Testing… this can take a minute",
+  "search": "Search",
+  "noAnswer": "No answer",
+  "testedAgo": "Tested {ago}",
+  "@testedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "delaySummary": "{answered} of {total} answered",
+  "@delaySummary": {
+    "placeholders": {
+      "answered": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noServers": "No servers yet. They appear once the core reaches Mozilla.",
+  "levelAll": "All",
+  "filter": "Filter",
+  "follow": "Auto-scroll",
+  "clear": "Clear",
+  "copyAll": "Copy",
+  "logsCopied": "Logs copied",
+  "noLogs": "No log lines yet.",
+  "sectionAccounts": "Account switching",
+  "switchThreshold": "Switch account at",
+  "switchThresholdHint": "The next account takes over when this share of the quota is used.",
+  "signInMethod": "Sign-in method",
+  "signInMethodBrowser": "Sign in with the browser",
+  "signInMethodApi": "Sign in directly",
+  "browserSignInBroken": "The sign-in page could not be opened.",
+  "browserSignInBlocked": "Mozilla did not complete the final step of adding the account (HTTP 406).",
+  "browserSignInFallback": "Sign in with email and password",
+  "backupExport": "Save a backup",
+  "backupImport": "Import a backup",
+  "backupSaved": "Saved: {name}",
+  "@backupSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupImportTitle": "Add these accounts?",
+  "backupAccountExists": "Already added; it signs in from the file",
+  "backupImportAction": "Add",
+  "backupImported": "{count, plural, =1{1 account added} other{{count} accounts added}}",
+  "@backupImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sectionDns": "DNS",
+  "dnsPreset": "DNS servers",
+  "dnsSystem": "System",
+  "dnsAuto": "Auto (Cloudflare, Google, Quad9)",
+  "dnsCustom": "Custom",
+  "dnsCustomHint": "One per line: https://…/dns-query, tls://…, or an IP address.",
+  "dnsFallback": "Fall back to the system DNS",
+  "testDns": "Test DNS",
+  "transport": "Protocol",
+  "transportH3": "HTTP/3 (QUIC)",
+  "ipVersion": "IP version",
+  "ipVersionAuto": "Auto (IPv4, then IPv6)",
+  "ipVersionDual": "Both at once (dual-stack)",
+  "ipVersionV6First": "IPv6 first, then IPv4",
+  "ipVersionV4": "IPv4 only",
+  "ipVersionV6": "IPv6 only",
+  "tunMtu": "MTU",
+  "tunMtuHint": "The VPN interface's packet size, 1280 to 9000. Empty: automatic.",
+  "tunMtuInvalid": "A number from 1280 to 9000, or empty",
+  "transportH2": "HTTP/2 (TCP)",
+  "transportH1": "HTTP/1.1 (TLS)",
+  "directRules": "Direct",
+  "directRulesHint": "Sites and addresses in this list open without the VPN, straight through your own internet. The chosen country's rules are already here: add, change, or remove lines. Choosing another country replaces them with its own.",
+  "restoreRegionRules": "Restore the region's rules",
+  "blockRules": "Block",
+  "blockRulesHint": "Sites and addresses in this list do not open at all, neither directly nor through the VPN: for ads, or sites you never want reached.",
+  "rulesTitle": "Rules",
+  "ruleSyntaxTitle": "How to write a rule",
+  "resolveDomains": "Look up names for IP rules",
+  "routingLists": "Geo files",
+  "listSource": "List source",
+  "listSourceCustom": "Set by hand",
+  "listsUpdatedAgo": "Updated {ago}",
+  "@listsUpdatedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "updateLists": "Update the geo files",
+  "listsUpdated": "The geo files were updated.",
+  "testDestination": "Test a destination",
+  "destinationHint": "A name, an address, or a URL",
+  "check": "Check",
+  "routeDirect": "Goes directly",
+  "routeProxy": "Goes through the VPN",
+  "routeBlock": "Blocked",
+  "ruleMatched": "Rule: {rule}",
+  "@ruleMatched": {
+    "placeholders": {
+      "rule": {
+        "type": "String"
+      }
+    }
+  },
+  "portRefusedNote": "Mozilla's proxy does not connect to this port.",
+  "sectionAdvanced": "Advanced",
+  "tlsFragment": "TLS fragmentation",
+  "tlsFragmentOff": "Off",
+  "tlsFragmentFirstByte": "First byte",
+  "tlsFragmentSni": "Server name (SNI)",
+  "tlsFragmentFirstByteHint": "Splits the TLS header at the first byte (0x16)",
+  "tlsFragmentSniHint": "Splits the server name (SNI) across TCP packets",
+  "tlsFragmentRecord": "TLS record",
+  "tlsFragmentRecordHint": "Splits the server name (SNI) across two TLS records",
+  "tlsFragmentOffHint": "Normal TLS connection",
+  "sectionBypass": "If Mozilla is blocked",
+  "apiRelay": "Relay server",
+  "apiRelayUse": "Use the relay server",
+  "apiRelayHint": "Your own Cloudflare Worker, or relay.php on your own host.\nUsed only when Mozilla doesn't answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.",
+  "upstreamProxy": "Upstream proxy",
+  "upstreamProxyOn": "Upstream proxy is on",
+  "upstreamProxyAddress": "SOCKS5 proxy address",
+  "upstreamProxyPort": "Port",
+  "upstreamProxyHint": "The connection to Mozilla goes through this proxy, for networks that block or slow Mozilla.\nIf the proxy runs on this device, leave it out of the VPN.",
+  "upstreamProxyInvalid": "Enter the proxy's address, such as 127.0.0.1.",
+  "upstreamProxyInvalidPort": "Enter a port from 1 to 65535.",
+  "upstreamProxyOwn": "That's this app's own proxy. Enter another one.",
+  "apiRelayInvalid": "Must be an https:// address.",
+  "listenAddress": "Listen on",
+  "listenLocal": "127.0.0.1 · this device only",
+  "listenAll": "0.0.0.0 · all networks (LAN)",
+  "proxyUsername": "Proxy username",
+  "proxyPassword": "Proxy password",
+  "proxyLoginHint": "Apps must sign in with these. Leave both empty for no login.",
+  "loginBothOrNone": "Fill in both, or leave both empty.",
+  "proxyLogin": "Proxy login",
+  "idleSleep": "Sleep when idle after",
+  "sleepNever": "Never",
+  "sleepMinutes": "{count} minutes",
+  "sleepHour": "1 hour",
+  "@sleepMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "showPublicIp": "Show the public IP",
+  "speedInNotification": "Show speed in the notification",
+  "liveTraffic": "Live traffic",
+  "totalTraffic": "Total traffic",
+  "verboseLogs": "Detailed logs",
+  "webDashboard": "Web dashboard",
+  "webDashboardOpen": "Open",
+  "webDashboardHint": "Advanced settings and more tools",
+  "numberInvalid": "Enter a number from {min} to {max}",
+  "@numberInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "notifySwitchedTitle": "Switched account",
+  "notifySwitchedBody": "Now using {name}.",
+  "@notifySwitchedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifySignInTitle": "Sign-in needed",
+  "notifySignInBody": "An account must be signed in again on the Accounts page.",
+  "navAbout": "About",
+  "appVersionLabel": "App version",
+  "coreVersionLabel": "Core version",
+  "checkUpdates": "Check for updates",
+  "checkingUpdates": "Checking…",
+  "upToDate": "You have the latest version.",
+  "updateAvailable": "Version {version} is available.",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Download",
+  "updateCheckFailed": "Could not check for updates: {error}",
+  "@updateCheckFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCheckNoNetwork": "Could not reach GitHub. Check your internet connection and try again.",
+  "@updateCheckNoNetwork": {
+    "description": "The update check could not reach GitHub (no connection, a timeout, or a refused TLS handshake)."
+  },
+  "updateNow": "Update",
+  "updateDownloading": "Downloading version {version}…",
+  "@updateDownloading": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateReady": "Version {version} is ready to install.",
+  "@updateReady": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateInstalling": "Installing version {version}. The app will close and open again.",
+  "@updateInstalling": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateFailed": "Couldn't update to version {version}.",
+  "@updateFailed": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateDone": "Updated to version {version}.",
+  "@updateDone": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateRolledBack": "The update to version {version} didn't finish, so the app went back to the previous version.",
+  "@updateRolledBack": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "repoNotSet": "The GitHub repository is not set yet.",
+  "sourceCode": "Source code",
+  "tapToConnect": "Click to connect",
+  "tapToDisconnect": "Click to disconnect",
+  "startOnBoot": "Start on boot",
+  "connectOnStartup": "Connect on startup",
+  "proxyServiceActive": "Proxy service active",
+  "navHome": "Home",
+  "groupApp": "App",
+  "groupNetwork": "Network",
+  "stateOff": "Disconnected",
+  "tapToConnectPhone": "Tap to connect",
+  "tapToDisconnectPhone": "Tap to disconnect",
+  "tapToConnectTv": "Press OK to connect",
+  "@tapToConnectTv": {
+    "description": "Under the switch on a TV, worked with a remote: its middle button is OK."
+  },
+  "tapToDisconnectTv": "Press OK to disconnect",
+  "lanAddress": "LAN {address}",
+  "@lanAddress": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendedLocation": "Recommended location",
+  "dataLeftOf": "of {limit}",
+  "@dataLeftOf": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "homeLocation": "Location",
+  "connectedTo": "Connected to",
+  "vpnNotAllowed": "The VPN needs your permission. Tap the button again and allow it.",
+  "dataUsedTitle": "Data used",
+  "bypassApps": "Per-app proxy",
+  "connectRetrying": "Couldn't connect. Check your internet.",
+  "failUnreachable": "Couldn't reach Mozilla's servers. Try another internet connection.",
+  "failUpstreamProxy": "Couldn't reach Mozilla through your upstream proxy. Check that it's running.",
+  "failInsideVpn": "This internet already goes through a VPN. Turn it off.",
+  "failRefused": "Mozilla's server refused the connection. Try again in a few minutes.",
+  "failLocationRefused": "This country isn't open to your account. Choose another country.",
+  "useRecommendedLocation": "Use the recommended location",
+  "exitMismatch": "You chose {chosen}, but your IP is in {exit}.",
+  "@exitMismatch": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      },
+      "chosen": {
+        "type": "String"
+      }
+    }
+  },
+  "failSignIn": "This account's sign-in has expired. Sign in again on the Accounts page.",
+  "failQuota": "This month's data is used up. Add another account.",
+  "failNotEntitled": "Mozilla doesn't let this account use the VPN. Add another account.",
+  "failRegion": "Mozilla doesn't offer its service in your country.",
+  "failServer": "Mozilla's service has a temporary problem. The app tries again by itself.",
+  "failNoAccount": "No account is ready. Open the Accounts page.",
+  "failTestSite": "Connected to the server, but sites don't open. Try another country.",
+  "failOther": "Couldn't connect. Try again.",
+  "failNoInternet": "No internet. Check Wi-Fi or mobile data.",
+  "waitingForNetwork": "Waiting for an internet connection…",
+  "@waitingForNetwork": {
+    "description": "The home page while the core waits for a network before connecting (state code waiting_for_network)."
+  },
+  "proxyStartFailed": "The proxy couldn't start on port {port}. Choose another port.",
+  "@proxyStartFailed": {
+    "description": "The home page after the proxy failed to start on its port for a reason other than another program holding it, such as a port Windows reserves (state code start_failed), with a Change port button.",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionSettings": "Connection settings",
+  "appModeExclude": "Bypass selected apps",
+  "appModeInclude": "Proxy selected apps",
+  "appModeExcludeHint": "Selected apps connect directly, not through the VPN: for example banking apps that refuse foreign addresses.",
+  "appModeIncludeHint": "Only the selected apps go through the VPN; the others connect directly.",
+  "fromRegionList": "Suggested: on the {region} list",
+  "@fromRegionList": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
+  "modeProxy": "Proxy",
+  "connectionMode": "Connection mode",
+  "modeProxyHint": "Only apps set up to use the proxy go through it.",
+  "modeSystemProxyHint": "Windows and most apps go through the proxy.",
+  "modeSystemProxyHintOther": "Browsers and most apps go through the proxy.",
+  "suggestedApps": "Suggested apps",
+  "showSystemApps": "Show system apps",
+  "suggestedAdded": "{count, plural, =0{The suggested apps are already selected} =1{1 suggested app selected} other{{count} suggested apps selected}}",
+  "@suggestedAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoSection": "Automatic",
+  "locationsSection": "Locations",
+  "dnsSummaryOk": "Encrypted DNS works",
+  "dnsSummaryFailed": "{count, plural, =1{1 name did not resolve} other{{count} names did not resolve}}",
+  "dnsVia": "via {server}",
+  "dnsSummaryDiffers": "{count, plural, =1{Your network's DNS answered 1 name with a filtering address. This app does not use it for them.} other{Your network's DNS answered {count} names with a filtering address. This app does not use it for them.}}",
+  "dnsAnswer": "Answer:",
+  "dnsNetworkAnswer": "Network DNS:",
+  "@dnsSummaryFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@dnsSummaryDiffers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@dnsVia": {
+    "placeholders": {
+      "server": {
+        "type": "String"
+      }
+    }
+  },
+  "dnsFiltered": "filtered",
+  "rulesSyntaxTitle": "One rule per line",
+  "ruleDomain": "The site and its subdomains",
+  "ruleFull": "Exactly this name",
+  "ruleKeyword": "Names that contain the word",
+  "ruleGeosite": "Sites of a tag in the geo files",
+  "ruleGeoip": "Addresses of a country in the geo files",
+  "ruleIp": "An address or a network",
+  "modeVpn": "VPN",
+  "@modeVpn": {
+    "description": "Phone connection mode: every app on the phone goes through the VPN."
+  },
+  "modeProxyOnly": "Proxy only",
+  "@modeProxyOnly": {
+    "description": "Phone connection mode: no VPN; only apps set up to use the local proxy. Also shown before the proxy address on the home page."
+  },
+  "noNetwork": "No internet connection. Turn on Wi-Fi or mobile data.",
+  "@noNetwork": {
+    "description": "Shown at once, in red, when the phone has neither Wi-Fi nor mobile data."
+  },
+  "blockAds": "Block ads",
+  "systemProxyTakenBy": "Another program set the system proxy to {address}, so traffic doesn't go through the VPN.",
+  "@systemProxyTakenBy": {
+    "description": "The home page when another program (another VPN or proxy) replaced the system proxy the app set (status system_proxy_taken).",
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "systemProxyTakenOff": "Another program turned the system proxy off, so traffic doesn't go through the VPN.",
+  "setSystemProxyAgain": "Set it again",
+  "modeTun": "TUN",
+  "@modeTun": {
+    "description": "The connection mode that sends every app through the VPN with a TUN adapter (system_proxy.mode tun)."
+  },
+  "modeTunHint": "All {os} traffic goes through the VPN.",
+  "@modeTunHint": {
+    "description": "Under the TUN mode on the home page; os is osWindows, osLinux, or osMacos.",
+    "placeholders": {
+      "os": {
+        "type": "String"
+      }
+    }
+  },
+  "osWindows": "Windows",
+  "osLinux": "Linux",
+  "osMacos": "macOS",
+  "tunInstallWaiting": "Waiting for permission to install the TUN service…",
+  "tunInstallCancelled": "TUN mode needs administrator permission once. It wasn't given, so the mode didn't change.",
+  "tunInstallFailed": "Couldn't install the TUN service: {error}",
+  "@tunInstallFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "tunStarting": "Starting TUN mode…",
+  "tunFailed": "TUN mode couldn't start. Trying again…",
+  "tunLost": "TUN mode stopped unexpectedly. Trying again…",
+  "tunNotRunning": "The TUN service isn't running. Trying again…",
+  "tunMissing": "The TUN service isn't installed.",
+  "tunOutdated": "The TUN service is older than this app. Install it again to use TUN mode.",
+  "tunAppOutdated": "The TUN service is newer than this app. Update the app to use TUN mode.",
+  "tunBusy": "Another copy of Merged VPN is using TUN mode.",
+  "tunNoDriver": "The system's TUN driver isn't available. Restart the computer and try again.",
+  "tunInstall": "Install",
+  "tunInstallAgain": "Install again",
+  "trayTunMode": "TUN mode (all apps)",
+  "removeTunService": "Remove the TUN service",
+  "removeTunServiceHint": "Removes the system service that TUN mode uses. Choosing TUN again installs it again.",
+  "tunServiceRemoved": "The TUN service was removed.",
+  "tunInstallPrompt": "Merged VPN wants to install the service for TUN mode.",
+  "@tunInstallPrompt": {
+    "description": "macOS: the reason its administrator password prompt shows when the app installs the TUN mode's service."
+  },
+  "tunRemovePrompt": "Merged VPN wants to remove the service for TUN mode.",
+  "@tunRemovePrompt": {
+    "description": "macOS: the reason its administrator password prompt shows when the app removes the TUN mode's service while the service does not run."
+  },
+  "tunRemoveFailed": "Couldn't remove the TUN service: {error}",
+  "@tunRemoveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionTun": "TUN settings",
+  "@sectionTun": {
+    "description": "The computer's settings section for TUN mode, after Routing."
+  },
+  "tunPrograms": "Programs that bypass the VPN",
+  "tunProgramsHint": "They connect directly, not through Mozilla. Only for programs that work without a VPN.",
+  "tunProgramsEmpty": "No programs yet.",
+  "addProgram": "Add program",
+  "programFiles": "Programs",
+  "@programFiles": {
+    "description": "The kind of file the program picker shows (on Windows, .exe files)."
+  },
+  "tunProgramAll": "All traffic",
+  "tunProgramAllHint": "The whole program connects directly.",
+  "tunProgramUdp": "UDP only",
+  "tunProgramUdpHint": "Only its UDP connects directly; the rest goes through the VPN.",
+  "udpNoticeSetting": "Notice when UDP is blocked",
+  "udpNoticeBody": "{program}'s UDP traffic can't go through the VPN.",
+  "@udpNoticeBody": {
+    "description": "A card on the home page in TUN mode when a program's UDP was refused.",
+    "placeholders": {
+      "program": {
+        "type": "String",
+        "example": "Telegram"
+      }
+    }
+  },
+  "dontShowAgain": "Don't show again",
+  "addRunningProgram": "From running programs",
+  "@addRunningProgram": {
+    "description": "TUN settings, Add program: the first of three ways (then a file, then a name)."
+  },
+  "addProgramFile": "Choose a file…",
+  "addProgramName": "Type a name…",
+  "programNameHint": "A program's file name, such as steam.exe; * stands for any text (steam* is every Steam program).",
+  "runningProgramsEmpty": "No other programs are running.",
+  "tabLog": "Log",
+  "tabConnections": "Connections",
+  "@tabConnections": {
+    "description": "Logs page: the tab that lists the proxy's connections (GET /api/connections)."
+  },
+  "connectionsEmpty": "No connections yet.",
+  "connectionsOpen": "{count} open",
+  "@connectionsOpen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "connTime": "Time",
+  "connRoute": "Rule",
+  "connDestination": "Destination",
+  "connInbound": "Inbound",
+  "@connInbound": {
+    "description": "How the client came: SOCKS5, HTTP, or TUN."
+  },
+  "connProtocol": "Protocol",
+  "@connProtocol": {
+    "description": "TCP or UDP."
+  },
+  "connColumns": "Columns",
+  "connTraffic": "Traffic",
+  "connDuration": "Duration",
+  "connRouteVpn": "Proxy",
+  "connRouteDirect": "Direct",
+  "connRouteBlocked": "Blocked",
+  "connRoutePort": "Port refused",
+  "@connRoutePort": {
+    "description": "Mozilla's proxy connects to ports 80, 443, 8080, and 8443 only."
+  },
+  "connRouteFailed": "Failed"
+}
