@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Merged VPN — Arman Flutter UI + PredatorVPN Go core.
+# meiyou — Arman Flutter UI + PredatorVPN Go core.
 #
-# Builds the Android APK on GitHub Actions and uploads it as an artifact.
-# It does NOT publish a GitHub release: download the APK from the run's
-# Artifacts (Actions tab > this run > "android").
+# Builds the Android APK on GitHub Actions, uploads it as an artifact
+# and publishes it on the v2.0.0 GitHub release (Releases tab).
 #
 # Trigger it with: Actions > Build Android > Run workflow.
 # No signing secrets are needed: without them the APKs are signed with
@@ -18,7 +17,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: build-android-${{ github.ref }}
@@ -132,10 +131,10 @@ jobs:
           flutter pub get
           flutter build apk --release --split-per-abi --dart-define=APP_VERSION=2.0.0
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/Merged-VPN-2.0.0-Android-$abi.apk"
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/meiyou-2.0.0-Android-$abi.apk"
           done
           flutter build apk --release --dart-define=APP_VERSION=2.0.0
-          cp build/app/outputs/flutter-apk/app-release.apk ../out/Merged-VPN-2.0.0-Android-universal.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/meiyou-2.0.0-Android-universal.apk
       - name: Remove the key
         if: always()
         run: rm -f app/android/release.jks app/android/key.properties
@@ -144,3 +143,13 @@ jobs:
           name: android
           path: out/*
           if-no-files-found: error
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.0.0
+          name: meiyou 2.0.0
+          body: |
+            meiyou 2.0.0 — Predator core + Arman UI.
+            Install the APK for your phone's processor (arm64-v8a for most modern phones), or the universal one.
+          files: out/*.apk
+          fail_on_unmatched_files: true
