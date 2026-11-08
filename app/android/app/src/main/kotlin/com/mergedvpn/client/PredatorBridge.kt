@@ -91,12 +91,16 @@ object PredatorBridge {
     /**
      * Makes sure the core is up, and turns the VPN on when [on] is true.
      * The Backend itself is created in PredatorApp.onCreate (the process
-     * starts there before any Activity), so a missing Backend here means
-     * the core failed to start — see PredatorApp.initializationError.
+     * starts there before any Activity). If that first start failed (a
+     * taken dashboard port, a storage error, ...), try creating it again
+     * here: giving up left the app on "Starting the core…" forever.
      */
     @JvmStatic
     @Synchronized
     fun startCore(context: Context, on: Boolean) {
+        if (!isRunning()) {
+            app()?.initBackend()
+        }
         if (!isRunning()) {
             Log.e(TAG, "the core did not start: ${app()?.initializationError}")
             return

@@ -97,6 +97,10 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app/android").setMethodCallHandler { call, result ->
             when (call.method) {
                 "dataDir" -> result.success(PredatorBridge.dataDir(this).absolutePath)
+                // Why the core did not start (PredatorApp.initializationError),
+                // or null when it did: the UI shows the reason instead of
+                // spinning on "Starting the core…" forever.
+                "coreError" -> result.success(PredatorApp.instance?.initializationError)
                 "startCore" -> {
                     PredatorBridge.startCore(this, on = false)
                     result.success(null)
