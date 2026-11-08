@@ -54,7 +54,7 @@ public class FoxVpnService extends VpnService implements PlatformInterface {
         starting=true;startForeground(NOTIFICATION,notification("Connecting…"));
         worker.execute(() -> {
             try {
-                if(app().backend==null)throw new Exception("Merged VPN could not start");
+                if(app().backend==null)throw new Exception("meiyou could not start");
                 JSONObject response=new JSONObject(app().backend.call("connect","[]"));
                 if(!response.optBoolean("ok"))throw new Exception(response.optString("error","Connection failed"));
                 if(stopping||"disconnected".equals(app().connection()))return;
@@ -116,7 +116,7 @@ public class FoxVpnService extends VpnService implements PlatformInterface {
         boolean connected="connected".equals(app().connection());
         long started=app().state.optLong("startedAt",0);
         String stats=ConnectionStats.summary(app().state.optLong("down"),app().state.optLong("up"));
-        return new Notification.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_fox_tile).setContentTitle("Merged VPN")
+        return new Notification.Builder(this,CHANNEL).setSmallIcon(R.drawable.ic_fox_tile).setContentTitle("meiyou")
             .setContentText(connected?stats:text).setSubText(connected?text:null)
             .setStyle(new Notification.BigTextStyle().bigText(connected?ConnectionStats.details(app().state.optLong("down"),app().state.optLong("up")):text))
             .setWhen(connected?started:0).setShowWhen(connected&&started>0).setUsesChronometer(connected&&started>0)
@@ -137,7 +137,7 @@ public class FoxVpnService extends VpnService implements PlatformInterface {
 
     @Override public int openTun(TunOptions options)throws Exception{
         if(VpnService.prepare(this)!=null)throw new Exception("VPN permission was revoked");
-        Builder builder=new Builder().setSession("Merged VPN").setMtu(options.getMTU());
+        Builder builder=new Builder().setSession("meiyou").setMtu(options.getMTU());
         RoutePrefixIterator addresses=options.getInet4Address();while(addresses.hasNext()){RoutePrefix p=addresses.next();builder.addAddress(p.address(),p.prefix());}
         addresses=options.getInet6Address();while(addresses.hasNext()){RoutePrefix p=addresses.next();builder.addAddress(p.address(),p.prefix());}
         builder.addDnsServer(options.getDNSServerAddress().getValue());

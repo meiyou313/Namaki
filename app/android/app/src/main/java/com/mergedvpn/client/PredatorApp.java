@@ -3,7 +3,7 @@
 // + Arman VPN Flutter UI (GPL-3.0, armanlife).
 //
 // PredatorApp is FoxApp.java from PredatorVPN v2.0.0, adapted:
-//  - package com.mergedvpn.client, application name "Merged VPN"
+//  - package com.mergedvpn.client, application name "meiyou"
 //  - the WebView MainActivity is gone: the UI is Arman's Flutter
 //    MainActivity (same package). State changes go to PredatorBridge
 //    instead of MainActivity.receive().
@@ -60,6 +60,7 @@ public final class PredatorApp extends Application implements Host {
     private CryptoVault vault;
     private ConnectivityManager connectivity;
     private String certificates;
+    private boolean libboxDone;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -93,6 +94,19 @@ public final class PredatorApp extends Application implements Host {
             }
             private void updateNetwork() { FoxVpnService service = vpn; if (service != null) service.networkChanged(); }
         });
+        initBackend();
+    }
+
+    /**
+     * Creates the Backend and starts its dashboard. Retryable: if the
+     * first start fails (a taken dashboard port, a storage error, ...),
+     * PredatorBridge.startCore calls this again instead of leaving the
+     * app on "Starting the core…" forever. The real error is kept in
+     * initializationError so the UI can show it.
+     */
+    public void initBackend() {
+        if (backend != null && initializationError == null) return;
+        initializationError = null;
         try {
             certificates = loadCertificates();
             SetupOptions options = new SetupOptions();
@@ -100,14 +114,20 @@ public final class PredatorApp extends Application implements Host {
             options.setWorkingPath(getFilesDir().getAbsolutePath());
             options.setTempPath(getCacheDir().getAbsolutePath());
             options.setFixAndroidStack(true);
-            Libbox.setup(options); Libbox.setLocale("en");
+            if (!libboxDone) {
+                Libbox.setup(options);
+                libboxDone = true;
+            }
+            Libbox.setLocale("en");
             backend = Mobile.newBackend(this, vault.read());
             backend.setDark(isDark());
             state = new JSONObject(backend.snapshot());
             startDashboard();
             catalog.execute(() -> backend.call("servers", "[]"));
         } catch (Exception e) {
-            initializationError = "Secure storage could not be initialized. Restart Merged VPN or reinstall if the problem persists.";
+            backend = null;
+            initializationError = "The core could not start (" + e + "). Restart meiyou or reinstall if the problem persists.";
+            android.util.Log.e("PredatorApp", "backend init failed", e);
         }
     }
 
@@ -121,6 +141,13 @@ public final class PredatorApp extends Application implements Host {
      * every poll) always gets the current token, and a stale listener
      * can never be trusted with an old one. The dashboard also refuses
      * requests without that token (dashboard.go: requireToken).
+     *
+     * The dashboard's port (10820) can already be taken — another VPN
+     * app on the phone (Arman, Predator, ...) listens on the same
+     * address. Then the first start fails and the app used to stay on
+     * "Starting the core…" forever. So try the next ports, and write
+     * the one that worked to config.json, so the Flutter UI finds the
+     * dashboard wherever it listens.
      */
     private void startDashboard() throws Exception {
         File dir = coreDataDir();
@@ -133,14 +160,21 @@ public final class PredatorApp extends Application implements Host {
         try (FileOutputStream out = new FileOutputStream(new File(dir, "local-api.token"))) {
             out.write(token.getBytes(StandardCharsets.UTF_8));
         }
-        File config = new File(dir, "config.json");
-        if (!config.exists()) {
-            try (FileOutputStream out = new FileOutputStream(config)) {
-                out.write("{\n  \"dashboard\": {\n    \"listen\": \"127.0.0.1:10820\"\n  }\n}\n".getBytes(StandardCharsets.UTF_8));
+        Exception last = null;
+        for (int port = 10820; port <= 10829; port++) {
+            try {
+                // gomobile maps Go's (error) return to a Java method that throws.
+                backend.startDashboard("127.0.0.1:" + port, token);
+            } catch (Exception e) {
+                last = e;
+                continue;
             }
+            try (FileOutputStream out = new FileOutputStream(new File(dir, "config.json"))) {
+                out.write(("{\n  \"dashboard\": {\n    \"listen\": \"127.0.0.1:" + port + "\"\n  }\n}\n").getBytes(StandardCharsets.UTF_8));
+            }
+            return;
         }
-        // gomobile maps Go's (error) return to a Java method that throws.
-        backend.startDashboard("127.0.0.1:10820", token);
+        throw new java.io.IOException("The dashboard could not listen on ports 10820-10829", last);
     }
 
     boolean isDark() {
