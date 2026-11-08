@@ -20,6 +20,12 @@ android {
     // The NDK Predator's Go core was built and tested with.
     ndkVersion = "28.0.13004108"
 
+    // FoxVpnService.java uses BuildConfig.DEBUG in three places. AGP 9
+    // does not generate BuildConfig unless asked, so enable it here.
+    buildFeatures {
+        buildConfig = true
+    }
+
     // The native libraries (the Go core, Flutter's engine, the app's code)
     // are compressed inside the APK, as zip files are: a third of the
     // download (33 MB to about 14 MB for arm64). Android unpacks them when it
