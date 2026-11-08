@@ -126,7 +126,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Arman VPN'**
+  /// **'meiyou'**
   String get appTitle;
 
   /// No description provided for @navOverview.
@@ -2664,7 +2664,7 @@ abstract class AppLocalizations {
   /// No description provided for @tunBusy.
   ///
   /// In en, this message translates to:
-  /// **'Another copy of Arman VPN is using TUN mode.'**
+  /// **'Another copy of meiyou is using TUN mode.'**
   String get tunBusy;
 
   /// No description provided for @tunNoDriver.
@@ -2712,13 +2712,13 @@ abstract class AppLocalizations {
   /// macOS: the reason its administrator password prompt shows when the app installs the TUN mode's service.
   ///
   /// In en, this message translates to:
-  /// **'Arman VPN wants to install the service for TUN mode.'**
+  /// **'meiyou wants to install the service for TUN mode.'**
   String get tunInstallPrompt;
 
   /// macOS: the reason its administrator password prompt shows when the app removes the TUN mode's service while the service does not run.
   ///
   /// In en, this message translates to:
-  /// **'Arman VPN wants to remove the service for TUN mode.'**
+  /// **'meiyou wants to remove the service for TUN mode.'**
   String get tunRemovePrompt;
 
   /// No description provided for @tunRemoveFailed.

@@ -10,7 +10,7 @@ class AppLocalizationsHu extends AppLocalizations {
   AppLocalizationsHu([String locale = 'hu']) : super(locale);
 
   @override
-  String get appTitle => 'Arman VPN';
+  String get appTitle => 'meiyou';
 
   @override
   String get navOverview => 'Áttekintés';
@@ -1512,7 +1512,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tunBusy =>
-      'Az Arman VPN egy másik példánya használja a TUN módot.';
+      'Az meiyou egy másik példánya használja a TUN módot.';
 
   @override
   String get tunNoDriver =>
@@ -1539,11 +1539,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'Az Arman VPN telepíteni szeretné a TUN mód szolgáltatását.';
+      'Az meiyou telepíteni szeretné a TUN mód szolgáltatását.';
 
   @override
   String get tunRemovePrompt =>
-      'Az Arman VPN el szeretné távolítani a TUN mód szolgáltatását.';
+      'Az meiyou el szeretné távolítani a TUN mód szolgáltatását.';
 
   @override
   String tunRemoveFailed(String error) {
