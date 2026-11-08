@@ -95,11 +95,19 @@ class AndroidCore {
   final String _dataDir;
 
   /// Opens a client of the core, starting the core (off) when it does not
-  /// run; it throws [CoreUnavailable] until the core answers.
+  /// run; it throws [CoreUnavailable] until the core answers. When the
+  /// core failed to start, the error is the core's own reason, so the UI
+  /// shows it (with a retry) instead of "Starting the core…" forever.
   Future<CoreApi> connect() async {
     if (await _channel.invokeMethod<bool>('isRunning') != true) {
       await _channel.invokeMethod<void>('startCore');
-      throw const CoreUnavailable(CoreProblem.starting);
+      if (await _channel.invokeMethod<bool>('isRunning') != true) {
+        final error = await _channel.invokeMethod<String>('coreError') ?? '';
+        if (error.isNotEmpty) {
+          throw CoreUnavailable(CoreProblem.notAnswering, error);
+        }
+        throw const CoreUnavailable(CoreProblem.starting);
+      }
     }
     try {
       final api = CoreApi(await CoreLocator.locate(_dataDir));
