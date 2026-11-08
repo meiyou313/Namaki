@@ -78,6 +78,7 @@ jobs:
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses > /dev/null
           sdkmanager 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.0.13004108'
+          test -f "$ANDROID_HOME/ndk/28.0.13004108/meta/platforms.json"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.0.13004108" >> "$GITHUB_ENV"
       - uses: actions/cache/restore@v4
         id: native-cache
@@ -87,9 +88,14 @@ jobs:
       - name: Build native Android library (Predator core -> foxvpn.aar)
         if: steps.native-cache.outputs.cache-hit != 'true'
         working-directory: predator-core
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.0.13004108
         run: |
+          # NOTE: do not set ANDROID_NDK_HOME from ${{ env.ANDROID_HOME }} —
+          # the env context does not carry the runner's ANDROID_HOME, so it
+          # expands to an empty string and gomobile sees "/ndk/...".
+          # The "Android toolchain" step already exported the correct
+          # ANDROID_NDK_HOME via GITHUB_ENV; re-export it from the shell here.
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.0.13004108"
+          test -f "$ANDROID_NDK_HOME/meta/platforms.json"
           go mod tidy
           go install github.com/sagernet/gomobile/cmd/gomobile
           go install github.com/sagernet/gomobile/cmd/gobind
