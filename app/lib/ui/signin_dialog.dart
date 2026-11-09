@@ -5,22 +5,28 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app_settings.dart';
 import '../core/android_core.dart';
 import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
+import 'browser_signin.dart';
 import 'format.dart';
 import 'widgets.dart';
 
 /// Adds an account, or signs one in again: the core runs the sign-in and
 /// the dialog shows whatever Mozilla asks for (codes, CAPTCHA, a link).
+/// [settings] lets the dialog open the browser sign-in by itself when a
+/// form sign-in fails with something the form cannot fix; without it the
+/// dialog only shows the failure.
 Future<void> showSignInDialog(
   BuildContext context,
   CoreController core, {
   String email = '',
   SignInState? started,
   VoidCallback? onBrowserRetry,
+  AppSettings? settings,
 }) => showDialog<void>(
   context: context,
   barrierDismissible: false,
@@ -29,6 +35,7 @@ Future<void> showSignInDialog(
     email: email,
     started: started,
     onBrowserRetry: onBrowserRetry,
+    settings: settings,
   ),
 );
 
@@ -38,12 +45,14 @@ class _SignInDialog extends StatefulWidget {
     required this.email,
     this.started,
     this.onBrowserRetry,
+    this.settings,
   });
 
   final CoreController core;
   final String email;
   final SignInState? started;
   final VoidCallback? onBrowserRetry;
+  final AppSettings? settings;
 
   @override
   State<_SignInDialog> createState() => _SignInDialogState();
@@ -115,6 +124,33 @@ class _SignInDialogState extends State<_SignInDialog> {
       field.selection = TextSelection.collapsed(offset: field.text.length);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) focus.requestFocus();
+      });
+      return;
+    }
+    if (widget.onBrowserRetry == null &&
+        widget.settings != null &&
+        s.step == SignInStep.failed &&
+        !_formProblems.contains(s.errorCode) &&
+        browserSignInSupported) {
+      // The form sign-in failed with something the person cannot fix in
+      // the form: open the browser sign-in for the same email instead,
+      // automatically. The dialog closes first; the browser page opens
+      // over the page below it. This never runs for a dialog the browser
+      // page opened (onBrowserRetry), so it cannot loop back to itself.
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final settings = widget.settings!;
+      final core = widget.core;
+      final email = s.email.isNotEmpty ? s.email : _email.text.trim();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!navigator.mounted) return;
+        navigator.pop();
+        startAddAccount(
+          navigator.context,
+          core,
+          settings,
+          email: email,
+          forceBrowser: true,
+        );
       });
       return;
     }

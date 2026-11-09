@@ -18,11 +18,11 @@ import 'widgets.dart';
 
 /// Whether this platform has the in-app browser for the browser sign-in
 /// (WebView2 on Windows, the system WebView on Android, WKWebView on
-/// macOS).
-// Merged build: browser sign-in was removed in Predator v2.0.0
-// (and its dashboard endpoint answers 501), so the browser flow is
-// off on every platform. Accounts sign in with email and password.
-bool get browserSignInSupported => false;
+/// macOS). Linux has no WebView here, so the form is the only way there.
+/// The core implements the sign-in endpoint again (the parallel Go work),
+/// so the flow is on wherever a browser view exists.
+bool get browserSignInSupported =>
+    Platform.isAndroid || Platform.isWindows || Platform.isMacOS;
 
 /// The Windows browser views share one WebView2 environment, made once per
 /// run of the app with the sign-in proxy it is given then; the core is
@@ -31,21 +31,25 @@ bool _windowsEnvironmentReady = false;
 int _windowsProxyPort = 0;
 
 /// Adds an account the way the settings say: through the browser page
-/// where that works, else with the email and password form.
+/// where that works, else with the email and password form. [forceBrowser]
+/// opens the browser page regardless of the settings, for the automatic
+/// fallback after a failed form sign-in.
 Future<void> startAddAccount(
   BuildContext context,
   CoreController core,
   AppSettings settings, {
   String email = '',
+  bool forceBrowser = false,
 }) async {
-  if (settings.signInMethod == SignInMethod.browser && browserSignInSupported) {
+  if ((forceBrowser || settings.signInMethod == SignInMethod.browser) &&
+      browserSignInSupported) {
     await _openBrowserSignIn(
       Navigator.of(context, rootNavigator: true),
       core,
       email,
     );
   } else {
-    await showSignInDialog(context, core, email: email);
+    await showSignInDialog(context, core, email: email, settings: settings);
   }
 }
 

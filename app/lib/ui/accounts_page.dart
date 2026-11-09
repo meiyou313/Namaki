@@ -124,9 +124,10 @@ class _SignInMethodRow extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Merged build: browser sign-in was removed in
-                // Predator v2.0.0, so only the email/password form is offered.
-                for (final method in const [SignInMethod.api])
+                // Both flows are offered; on a platform without an
+                // in-app browser (Linux) the browser choice falls back
+                // to the form.
+                for (final method in SignInMethod.values)
                   RadioListTile<SignInMethod>(
                     value: method,
                     title: Text(_label(l, method)),
@@ -589,7 +590,12 @@ class _AccountCard extends StatelessWidget {
     try {
       final started = await api.startSignInAgain(account.id);
       if (context.mounted) {
-        await showSignInDialog(context, core, started: started);
+        await showSignInDialog(
+          context,
+          core,
+          started: started,
+          settings: settings,
+        );
       }
     } on CoreApiException catch (e) {
       if (!context.mounted) return;
