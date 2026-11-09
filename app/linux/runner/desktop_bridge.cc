@@ -65,7 +65,7 @@ struct Indicator {
   }
 };
 
-constexpr const char* kAutostartFile = "arman-vpn.desktop";
+constexpr const char* kAutostartFile = "namaki.desktop";
 
 }  // namespace
 
@@ -269,7 +269,7 @@ static void notify(DesktopBridge* self, const gchar* title, const gchar* body) {
       self->bus, "org.freedesktop.Notifications",
       "/org/freedesktop/Notifications", "org.freedesktop.Notifications",
       "Notify",
-      g_variant_new("(susssasa{sv}i)", "Arman VPN", self->notification,
+      g_variant_new("(susssasa{sv}i)", "Namaki", self->notification,
                     self->app_icon.c_str(), title, body, &actions, &hints, -1),
       G_VARIANT_TYPE("(u)"), G_DBUS_CALL_FLAGS_NONE, -1, nullptr, on_notified,
       self);
@@ -293,7 +293,7 @@ static void set_autostart(DesktopBridge* self, bool enabled,
   g_autofree gchar* entry = g_strdup_printf(
       "[Desktop Entry]\n"
       "Type=Application\n"
-      "Name=Arman VPN\n"
+      "Name=Namaki\n"
       "Exec=%s\n"
       "Icon=%s\n"
       "Terminal=false\n"
