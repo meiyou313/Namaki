@@ -34,6 +34,10 @@ class AppSettings extends ChangeNotifier {
   /// How a new account signs in (the accounts page's row).
   SignInMethod signInMethod = SignInMethod.api;
 
+  /// The address the location delay test probes, by its short id
+  /// (telegram, youtube, ...); 'telegram' is the default.
+  String pingTarget = 'telegram';
+
   /// When the user closed the "account running out" notice; it stays away
   /// for a day after.
   DateTime? lowQuotaDismissedAt;
@@ -127,6 +131,18 @@ class AppSettings extends ChangeNotifier {
   /// The core's routing regions (`routing.region`); empty is none.
   static const regions = ['ir', 'cn', 'ru', 'af', 'tr', 'id', 'br', ''];
 
+  /// The probe addresses the location delay test can measure through, by
+  /// their short ids.
+  static const pingTargets = [
+    'telegram',
+    'youtube',
+    'instagram',
+    'x',
+    'facebook',
+    'tiktok',
+    'bbc',
+  ];
+
   Locale? get locale => language.isEmpty ? null : localeOf(language);
 
   /// The routing region most users of [language] want: Persian is Iran,
@@ -170,6 +186,10 @@ class AppSettings extends ChangeNotifier {
         s.signInMethod =
             SignInMethod.values.asNameMap()[j['signin_method']] ??
             s.signInMethod;
+        if (j['ping_target'] case final String v
+            when pingTargets.contains(v)) {
+          s.pingTarget = v;
+        }
         if (j['dismissed_update'] case final String v) s.dismissedUpdate = v;
         if (j['update_version'] case final String v) s.updateVersion = v;
         if (j['update_url'] case final String v) s.updateUrl = v;
@@ -209,6 +229,7 @@ class AppSettings extends ChangeNotifier {
     DateTime? updateCheckedAt,
     String? updateVersion,
     String? updateUrl,
+    String? pingTarget,
     bool? autostart,
     bool? autoConnect,
     bool? udpNotice,
@@ -225,6 +246,7 @@ class AppSettings extends ChangeNotifier {
     this.updateCheckedAt = updateCheckedAt ?? this.updateCheckedAt;
     this.updateVersion = updateVersion ?? this.updateVersion;
     this.updateUrl = updateUrl ?? this.updateUrl;
+    this.pingTarget = pingTarget ?? this.pingTarget;
     this.firstRun = firstRun ?? this.firstRun;
     this.language = language ?? this.language;
     this.themeMode = themeMode ?? this.themeMode;
@@ -252,6 +274,7 @@ class AppSettings extends ChangeNotifier {
           'update_checked_at': updateCheckedAt?.toIso8601String(),
           'update_version': updateVersion,
           'update_url': updateUrl,
+          'ping_target': pingTarget,
           'autostart': autostart,
           'auto_connect': autoConnect,
           'udp_notice': udpNotice,
