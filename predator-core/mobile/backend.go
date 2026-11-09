@@ -349,6 +349,9 @@ func (b *Backend) Call(channel, argsJSON string) string {
 	case "login":
 		v, _ := arg(0).(map[string]any)
 		result, err = b.login(ctx, str(v, "email"), str(v, "password"))
+	case "browserLogin":
+		v, _ := arg(0).(map[string]any)
+		result, err = b.browserLogin(ctx, str(v, "email"), str(v, "sessionToken"))
 	case "verify":
 		result, err = b.verify(ctx, text(0))
 	case "logout":

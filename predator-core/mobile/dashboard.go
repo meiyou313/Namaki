@@ -22,8 +22,8 @@
 //   - Translates Snapshot() into Arman's CoreStatus JSON (see MERGE-ANALYSIS.md §3).
 //   - Maps sign-in / accounts / locations / settings / power onto Backend.Call.
 //   - Returns 501 with a clear message for things Predator has no
-//     equivalent for (browser sign-in — removed in Predator v2.0.0,
-//     backup export, live connection list, update download).
+//     equivalent for (backup export, live connection list, update
+//     download, the browser sign-in proxy).
 //   - Does NOT replace FoxVpnService / the sing-box TUN stack. The TUN
 //     state in /api/status is reported from the Backend snapshot only;
 //     wiring the real VpnService state in is a TODO marked below.
@@ -1036,6 +1036,54 @@ func (d *dashboard) handleStartSignIn(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleStartBrowserSignIn starts a browser sign-in: the WebView already
+// signed the person in and handed over the session token, so the core
+// follows it in the background (poll verified -> PKCE exchange) while
+// the page polls GET /api/signin/{id} for the outcome.
+func (d *dashboard) handleStartBrowserSignIn(w http.ResponseWriter, r *http.Request) {
+	body := readBody(r)
+	email := str(body, "email")
+	token := cleanSessionToken(str(body, "session_token"))
+	if email == "" || !validSessionToken(token) {
+		err := errors.New("The sign-in page did not hand over a usable session token")
+		writeJSON(w, http.StatusOK, object{
+			"id": "", "email": email, "step": "failed",
+			"error": err.Error(), "error_code": signInErrorCode(err),
+		})
+		return
+	}
+	d.mu.Lock()
+	d.next++
+	id := fmt.Sprintf("predator-%d", d.next)
+	if d.signins == nil {
+		d.signins = map[string]object{}
+	}
+	d.signins[id] = object{"email": email, "method": "browser", "step": "working"}
+	d.mu.Unlock()
+	go func() {
+		_, err := d.call("browserLogin", object{"email": email, "sessionToken": token})
+		// Only report into an entry that still exists: a DELETE in the
+		// meantime means the page went away and nothing should revive it.
+		// The entry itself is replaced, never mutated, so a concurrent
+		// state read keeps seeing a complete object.
+		d.mu.Lock()
+		defer d.mu.Unlock()
+		if _, ok := d.signins[id]; !ok {
+			return
+		}
+		if err != nil {
+			d.signins[id] = object{"email": email, "method": "browser", "step": "failed",
+				"error": err.Error(), "error_code": signInErrorCode(err)}
+			return
+		}
+		d.signins[id] = object{"email": email, "method": "browser", "step": "done"}
+	}()
+	writeJSON(w, http.StatusOK, object{
+		"id": id, "email": email, "step": "working",
+		"password_accepted": true,
+	})
+}
+
 func signInErrorCode(err error) string {
 	msg := strings.ToLower(err.Error())
 	switch {
@@ -1056,6 +1104,18 @@ func (d *dashboard) handleSignInState(w http.ResponseWriter, r *http.Request, id
 	d.mu.Unlock()
 	if !ok {
 		writeErr(w, http.StatusNotFound, "Unknown sign-in")
+		return
+	}
+	// A browser sign-in reports its own step: working while the core
+	// follows the session, done or failed to end the poll. Email and
+	// password entries carry no step and fall through to the need-code
+	// re-report below.
+	if step := str(s, "step"); step != "" {
+		writeJSON(w, http.StatusOK, object{
+			"id": id, "email": str(s, "email"), "step": step,
+			"error": str(s, "error"), "error_code": str(s, "error_code"),
+			"password_accepted": true,
+		})
 		return
 	}
 	// Predator keeps no pollable sign-in state; the state is whatever
@@ -1166,7 +1226,13 @@ func (b *Backend) StartDashboard(listen string, token string) error {
 			writeErr(w, http.StatusNotImplemented, msg)
 		}
 	}
-	mux.HandleFunc("/api/signin/browser", unsupported("Browser sign-in was removed in Predator v2.0.0; use email/password sign-in."))
+	mux.HandleFunc("/api/signin/browser", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			d.handleStartBrowserSignIn(w, r)
+			return
+		}
+		writeErr(w, http.StatusMethodNotAllowed, "POST only")
+	})
 	mux.HandleFunc("/api/signin/browser/proxy", unsupported("Browser sign-in was removed in Predator v2.0.0."))
 	mux.HandleFunc("/api/connections", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, []any{})
