@@ -1,17 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The home-screen widget: one round connect/disconnect button. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The home-screen widget: a small 2x1 card — the chick, the app name and
+     the state line, plus the state icon. The whole card is the toggle:
+     ConnectWidget puts the tap on the root. The card's background, text
+     colors and icon all change with the state (dark grey off, amber
+     connecting, bright green connected); the off state is the default
+     shown here, also after a reboot before the first update. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="0dp">
-    <!-- fitCenter keeps the disc round in any cell shape. -->
+    android:background="@drawable/widget_card_off"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
+
+    <!-- The chick launcher icon. -->
     <ImageView
-        android:id="@+id/widget_button"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:contentDescription="@string/widget_connect"
+        android:id="@+id/widget_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:contentDescription="@null"
         android:scaleType="fitCenter"
-        android:src="@drawable/widget_button_off" />
-</FrameLayout>
+        android:src="@mipmap/ic_launcher" />
+
+    <!-- The name and the state line. -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/app_name"
+            android:textColor="@color/widget_off_title"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="@string/widget_status_off"
+            android:textColor="@color/widget_off_status"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- The state icon: a power sign, three dots, or a check. It is an
+         animated vector, so it draws in when the state changes on launchers
+         that animate them; its end frame is the static picture. -->
+    <ImageView
+        android:id="@+id/widget_state_icon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:contentDescription="@null"
+        android:scaleType="fitCenter"
+        android:src="@drawable/widget_state_off" />
+</LinearLayout>
