@@ -468,5 +468,17 @@
   "connRouteDirect": "Direto",
   "connRouteBlocked": "Bloqueado",
   "connRoutePort": "Porta recusada",
-  "connRouteFailed": "Falhou"
+  "connRouteFailed": "Falhou",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }

@@ -1211,6 +1211,42 @@ class AppLocalizationsFa extends AppLocalizations {
       'VPN به اجازه شما نیاز دارد. دوباره دکمه را بزنید و اجازه دهید.';
 
   @override
+  String get usageTitle => 'مصرف داده';
+
+  @override
+  String get usageDaily => 'روزانه';
+
+  @override
+  String get usageWeekly => 'هفتگی';
+
+  @override
+  String get usageMonthly => 'ماهانه';
+
+  @override
+  String get usageToday => 'امروز';
+
+  @override
+  String get usageThisWeek => 'این هفته';
+
+  @override
+  String get usageThisMonth => 'این ماه';
+
+  @override
+  String get usageDownload => 'دانلود';
+
+  @override
+  String get usageUpload => 'آپلود';
+
+  @override
+  String get usageNoData => 'هنوز مصرفی ثبت نشده';
+
+  @override
+  String get usageSession => 'این نشست';
+
+  @override
+  String get usageTotal => 'مجموع';
+
+  @override
   String get dataUsedTitle => 'حجم مصرف‌شده';
 
   @override

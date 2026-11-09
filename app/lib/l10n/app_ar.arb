@@ -468,5 +468,17 @@
   "connRouteDirect": "مباشر",
   "connRouteBlocked": "محظور",
   "connRoutePort": "منفذ مرفوض",
-  "connRouteFailed": "فشل"
+  "connRouteFailed": "فشل",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }

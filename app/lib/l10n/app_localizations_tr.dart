@@ -1217,6 +1217,42 @@ class AppLocalizationsTr extends AppLocalizations {
       'VPN için izniniz gerekiyor. Düğmeye tekrar dokunun ve izin verin.';
 
   @override
+  String get usageTitle => 'Data usage';
+
+  @override
+  String get usageDaily => 'Daily';
+
+  @override
+  String get usageWeekly => 'Weekly';
+
+  @override
+  String get usageMonthly => 'Monthly';
+
+  @override
+  String get usageToday => 'Today';
+
+  @override
+  String get usageThisWeek => 'This week';
+
+  @override
+  String get usageThisMonth => 'This month';
+
+  @override
+  String get usageDownload => 'Download';
+
+  @override
+  String get usageUpload => 'Upload';
+
+  @override
+  String get usageNoData => 'No usage recorded yet';
+
+  @override
+  String get usageSession => 'This session';
+
+  @override
+  String get usageTotal => 'Total';
+
+  @override
   String get dataUsedTitle => 'Kullanılan veri';
 
   @override

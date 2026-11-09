@@ -2223,6 +2223,78 @@ abstract class AppLocalizations {
   /// **'The VPN needs your permission. Tap the button again and allow it.'**
   String get vpnNotAllowed;
 
+  /// No description provided for @usageTitle.
+
+  /// In en, this message translates to:
+  /// **'Data usage'**
+  String get usageTitle;
+
+  /// No description provided for @usageDaily.
+
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get usageDaily;
+
+  /// No description provided for @usageWeekly.
+
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get usageWeekly;
+
+  /// No description provided for @usageMonthly.
+
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get usageMonthly;
+
+  /// No description provided for @usageToday.
+
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get usageToday;
+
+  /// No description provided for @usageThisWeek.
+
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get usageThisWeek;
+
+  /// No description provided for @usageThisMonth.
+
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get usageThisMonth;
+
+  /// No description provided for @usageDownload.
+
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get usageDownload;
+
+  /// No description provided for @usageUpload.
+
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get usageUpload;
+
+  /// No description provided for @usageNoData.
+
+  /// In en, this message translates to:
+  /// **'No usage recorded yet'**
+  String get usageNoData;
+
+  /// No description provided for @usageSession.
+
+  /// In en, this message translates to:
+  /// **'This session'**
+  String get usageSession;
+
+  /// No description provided for @usageTotal.
+
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get usageTotal;
+
   /// No description provided for @dataUsedTitle.
   ///
   /// In en, this message translates to:

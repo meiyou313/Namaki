@@ -468,5 +468,17 @@
   "connRouteDirect": "مستقیم",
   "connRouteBlocked": "مسدود",
   "connRoutePort": "پورت غیرمجاز",
-  "connRouteFailed": "ناموفق"
+  "connRouteFailed": "ناموفق",
+  "usageTitle": "مصرف داده",
+  "usageDaily": "روزانه",
+  "usageWeekly": "هفتگی",
+  "usageMonthly": "ماهانه",
+  "usageToday": "امروز",
+  "usageThisWeek": "این هفته",
+  "usageThisMonth": "این ماه",
+  "usageDownload": "دانلود",
+  "usageUpload": "آپلود",
+  "usageNoData": "هنوز مصرفی ثبت نشده",
+  "usageSession": "این نشست",
+  "usageTotal": "مجموع"
 }

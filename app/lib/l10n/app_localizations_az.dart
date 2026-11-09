@@ -1219,6 +1219,42 @@ class AppLocalizationsAz extends AppLocalizations {
       'VPN-in işləməsi üçün icazə lazımdır. Düyməyə yenidən toxunun və icazə verin.';
 
   @override
+  String get usageTitle => 'Data usage';
+
+  @override
+  String get usageDaily => 'Daily';
+
+  @override
+  String get usageWeekly => 'Weekly';
+
+  @override
+  String get usageMonthly => 'Monthly';
+
+  @override
+  String get usageToday => 'Today';
+
+  @override
+  String get usageThisWeek => 'This week';
+
+  @override
+  String get usageThisMonth => 'This month';
+
+  @override
+  String get usageDownload => 'Download';
+
+  @override
+  String get usageUpload => 'Upload';
+
+  @override
+  String get usageNoData => 'No usage recorded yet';
+
+  @override
+  String get usageSession => 'This session';
+
+  @override
+  String get usageTotal => 'Total';
+
+  @override
   String get dataUsedTitle => 'İstifadə olunan trafik';
 
   @override

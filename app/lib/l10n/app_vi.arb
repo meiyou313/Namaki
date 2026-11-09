@@ -468,5 +468,17 @@
   "connRouteDirect": "Trực tiếp",
   "connRouteBlocked": "Bị chặn",
   "connRoutePort": "Cổng bị từ chối",
-  "connRouteFailed": "Thất bại"
+  "connRouteFailed": "Thất bại",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }

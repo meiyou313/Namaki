@@ -468,5 +468,17 @@
   "connRouteDirect": "直连",
   "connRouteBlocked": "已拦截",
   "connRoutePort": "端口被拒",
-  "connRouteFailed": "失败"
+  "connRouteFailed": "失败",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }

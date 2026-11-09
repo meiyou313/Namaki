@@ -192,7 +192,11 @@
   "reasonQuotaThreshold": "Used {percent}% of its data, so the next account took over.",
   "@reasonQuotaThreshold": {
     "description": "An account set aside at the switch threshold (percent, the setting) while the next account is used.",
-    "placeholders": {"percent": {"type": "int"}}
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   },
   "reasonQuotaExhausted": "This month's data is used up; it is used again after the monthly reset.",
   "reasonSignInRequired": "Sign in again to use this account.",
@@ -1016,5 +1020,17 @@
   "@connRoutePort": {
     "description": "Mozilla's proxy connects to ports 80, 443, 8080, and 8443 only."
   },
-  "connRouteFailed": "Failed"
+  "connRouteFailed": "Failed",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }

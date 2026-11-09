@@ -468,5 +468,17 @@
   "connRouteDirect": "সরাসরি",
   "connRouteBlocked": "অবরুদ্ধ",
   "connRoutePort": "পোর্ট প্রত্যাখ্যাত",
-  "connRouteFailed": "ব্যর্থ"
+  "connRouteFailed": "ব্যর্থ",
+  "usageTitle": "Data usage",
+  "usageDaily": "Daily",
+  "usageWeekly": "Weekly",
+  "usageMonthly": "Monthly",
+  "usageToday": "Today",
+  "usageThisWeek": "This week",
+  "usageThisMonth": "This month",
+  "usageDownload": "Download",
+  "usageUpload": "Upload",
+  "usageNoData": "No usage recorded yet",
+  "usageSession": "This session",
+  "usageTotal": "Total"
 }
