@@ -2,7 +2,7 @@
 # meiyou — Arman Flutter UI + PredatorVPN Go core.
 #
 # Builds the Android APK on GitHub Actions, uploads it as an artifact
-# and publishes it on the v2.0.0 GitHub release (Releases tab).
+# and publishes it on the v3.0.0 GitHub release (Releases tab).
 #
 # Trigger it with: Actions > Build Android > Run workflow.
 # No signing secrets are needed: without them the APKs are signed with
@@ -129,12 +129,12 @@ jobs:
           mkdir -p out
           cd app
           flutter pub get
-          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=2.0.0
+          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=3.0.0
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/meiyou-2.0.0-Android-$abi.apk"
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/meiyou-3.0.0-Android-$abi.apk"
           done
-          flutter build apk --release --dart-define=APP_VERSION=2.0.0
-          cp build/app/outputs/flutter-apk/app-release.apk ../out/meiyou-2.0.0-Android-universal.apk
+          flutter build apk --release --dart-define=APP_VERSION=3.0.0
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/meiyou-3.0.0-Android-universal.apk
       - name: Remove the key
         if: always()
         run: rm -f app/android/release.jks app/android/key.properties
@@ -146,10 +146,10 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0.0
-          name: meiyou 2.0.0
+          tag_name: v3.0.0
+          name: meiyou 3.0.0
           body: |
-            meiyou 2.0.0 — Predator core + Arman UI.
+            meiyou 3.0.0 — Predator core + Arman UI.
             Install the APK for your phone's processor (arm64-v8a for most modern phones), or the universal one.
           files: out/*.apk
           fail_on_unmatched_files: true
