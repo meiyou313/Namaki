@@ -10,7 +10,7 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'Tổng quan';
@@ -1533,7 +1533,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dịch vụ TUN mới hơn ứng dụng này. Hãy cập nhật ứng dụng để dùng chế độ TUN.';
 
   @override
-  String get tunBusy => 'Một bản meiyou khác đang dùng chế độ TUN.';
+  String get tunBusy => 'Một bản Namaki khác đang dùng chế độ TUN.';
 
   @override
   String get tunNoDriver =>
@@ -1560,10 +1560,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'meiyou muốn cài đặt dịch vụ cho chế độ TUN.';
+      'Namaki muốn cài đặt dịch vụ cho chế độ TUN.';
 
   @override
-  String get tunRemovePrompt => 'meiyou muốn gỡ dịch vụ của chế độ TUN.';
+  String get tunRemovePrompt => 'Namaki muốn gỡ dịch vụ của chế độ TUN.';
 
   @override
   String tunRemoveFailed(String error) {

@@ -10,7 +10,7 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'Ringkasan';
@@ -1534,7 +1534,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Layanan TUN lebih baru dari aplikasi ini. Perbarui aplikasi untuk memakai mode TUN.';
 
   @override
-  String get tunBusy => 'Salinan lain meiyou sedang memakai mode TUN.';
+  String get tunBusy => 'Salinan lain Namaki sedang memakai mode TUN.';
 
   @override
   String get tunNoDriver =>
@@ -1561,10 +1561,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'meiyou ingin memasang layanan untuk mode TUN.';
+      'Namaki ingin memasang layanan untuk mode TUN.';
 
   @override
-  String get tunRemovePrompt => 'meiyou ingin menghapus layanan mode TUN.';
+  String get tunRemovePrompt => 'Namaki ingin menghapus layanan mode TUN.';
 
   @override
   String tunRemoveFailed(String error) {

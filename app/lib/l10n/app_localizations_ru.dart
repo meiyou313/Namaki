@@ -10,7 +10,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'Обзор';
@@ -1543,7 +1543,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Служба TUN новее этого приложения. Обновите приложение, чтобы пользоваться режимом TUN.';
 
   @override
-  String get tunBusy => 'Режимом TUN пользуется другая копия meiyou.';
+  String get tunBusy => 'Режимом TUN пользуется другая копия Namaki.';
 
   @override
   String get tunNoDriver =>
@@ -1570,10 +1570,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'meiyou хочет установить службу для режима TUN.';
+      'Namaki хочет установить службу для режима TUN.';
 
   @override
-  String get tunRemovePrompt => 'meiyou хочет удалить службу режима TUN.';
+  String get tunRemovePrompt => 'Namaki хочет удалить службу режима TUN.';
 
   @override
   String tunRemoveFailed(String error) {

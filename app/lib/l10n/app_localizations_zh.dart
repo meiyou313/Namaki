@@ -10,7 +10,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => '概览';
@@ -1475,7 +1475,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tunAppOutdated => 'TUN 服务比此应用新。请更新应用以使用 TUN 模式。';
 
   @override
-  String get tunBusy => '另一个 meiyou 副本正在使用 TUN 模式。';
+  String get tunBusy => '另一个 Namaki 副本正在使用 TUN 模式。';
 
   @override
   String get tunNoDriver => '系统的 TUN 驱动不可用。请重启电脑后重试。';
@@ -1499,10 +1499,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tunServiceRemoved => '已移除 TUN 服务。';
 
   @override
-  String get tunInstallPrompt => 'meiyou 想要安装 TUN 模式的服务。';
+  String get tunInstallPrompt => 'Namaki 想要安装 TUN 模式的服务。';
 
   @override
-  String get tunRemovePrompt => 'meiyou 想要移除 TUN 模式的服务。';
+  String get tunRemovePrompt => 'Namaki 想要移除 TUN 模式的服务。';
 
   @override
   String tunRemoveFailed(String error) {
@@ -1625,7 +1625,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   AppLocalizationsZhHant() : super('zh_Hant');
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => '總覽';
@@ -3055,7 +3055,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tunAppOutdated => 'TUN 服務比此應用程式新。請更新應用程式以使用 TUN 模式。';
 
   @override
-  String get tunBusy => '另一個 meiyou 副本正在使用 TUN 模式。';
+  String get tunBusy => '另一個 Namaki 副本正在使用 TUN 模式。';
 
   @override
   String get tunNoDriver => '系統的 TUN 驅動程式無法使用。請重新啟動電腦後再試一次。';
@@ -3079,10 +3079,10 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tunServiceRemoved => '已移除 TUN 服務。';
 
   @override
-  String get tunInstallPrompt => 'meiyou 想要安裝 TUN 模式的服務。';
+  String get tunInstallPrompt => 'Namaki 想要安裝 TUN 模式的服務。';
 
   @override
-  String get tunRemovePrompt => 'meiyou 想要移除 TUN 模式的服務。';
+  String get tunRemovePrompt => 'Namaki 想要移除 TUN 模式的服務。';
 
   @override
   String tunRemoveFailed(String error) {

@@ -10,7 +10,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'Genel bakış';
@@ -1535,7 +1535,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tunBusy =>
-      'meiyou\'in başka bir kopyası TUN modunu kullanıyor.';
+      'Namaki\'in başka bir kopyası TUN modunu kullanıyor.';
 
   @override
   String get tunNoDriver =>
@@ -1562,11 +1562,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'meiyou, TUN modu için hizmeti yüklemek istiyor.';
+      'Namaki, TUN modu için hizmeti yüklemek istiyor.';
 
   @override
   String get tunRemovePrompt =>
-      'meiyou, TUN modunun hizmetini kaldırmak istiyor.';
+      'Namaki, TUN modunun hizmetini kaldırmak istiyor.';
 
   @override
   String tunRemoveFailed(String error) {

@@ -10,7 +10,7 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'نمای کلی';
@@ -1523,7 +1523,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'سرویس TUN از این برنامه جدیدتر است. برای استفاده از حالت TUN برنامه را به‌روز کنید.';
 
   @override
-  String get tunBusy => 'حالت TUN را نسخه دیگری از meiyou استفاده می‌کند.';
+  String get tunBusy => 'حالت TUN را نسخه دیگری از Namaki استفاده می‌کند.';
 
   @override
   String get tunNoDriver =>
@@ -1549,11 +1549,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get tunServiceRemoved => 'سرویس TUN حذف شد.';
 
   @override
-  String get tunInstallPrompt => 'برای حالت TUN، سرویس meiyou باید نصب شود.';
+  String get tunInstallPrompt => 'برای حالت TUN، سرویس Namaki باید نصب شود.';
 
   @override
   String get tunRemovePrompt =>
-      'برای حذف حالت TUN، سرویس meiyou باید حذف شود.';
+      'برای حذف حالت TUN، سرویس Namaki باید حذف شود.';
 
   @override
   String tunRemoveFailed(String error) {

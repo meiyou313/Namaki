@@ -10,7 +10,7 @@ class AppLocalizationsHu extends AppLocalizations {
   AppLocalizationsHu([String locale = 'hu']) : super(locale);
 
   @override
-  String get appTitle => 'meiyou';
+  String get appTitle => 'Namaki';
 
   @override
   String get navOverview => 'Áttekintés';
@@ -1548,7 +1548,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tunBusy =>
-      'Az meiyou egy másik példánya használja a TUN módot.';
+      'Az Namaki egy másik példánya használja a TUN módot.';
 
   @override
   String get tunNoDriver =>
@@ -1575,11 +1575,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'Az meiyou telepíteni szeretné a TUN mód szolgáltatását.';
+      'Az Namaki telepíteni szeretné a TUN mód szolgáltatását.';
 
   @override
   String get tunRemovePrompt =>
-      'Az meiyou el szeretné távolítani a TUN mód szolgáltatását.';
+      'Az Namaki el szeretné távolítani a TUN mód szolgáltatását.';
 
   @override
   String tunRemoveFailed(String error) {
