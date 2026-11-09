@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const appVersion = "3.0.0"
+const appVersion = "3.1.0"
 
 var stableVersion = regexp.MustCompile(`^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$`)
 var updateDigest = regexp.MustCompile(`^sha256:[a-f0-9]{64}$`)
@@ -69,8 +69,8 @@ func selectAndroidRelease(raw []byte, current, arch string) (object, error) {
 	if !available {
 		return result, nil
 	}
-	name := "PredatorVPN-" + version + "-Android-" + arch + ".apk"
-	url := "https://github.com/erfan-tahvilian/PredatorVPN/releases/download/" + release.Tag + "/" + name
+	name := "namaki-" + version + "-Android-" + arch + ".apk"
+	url := "https://github.com/meiyou313/Namaki/releases/download/" + release.Tag + "/" + name
 	for _, asset := range release.Assets {
 		if asset.Name == name && asset.URL == url && asset.State == "uploaded" && asset.Size > 0 && updateDigest.MatchString(asset.Digest) {
 			return object{"available": true, "currentVersion": current, "latestVersion": version, "name": name, "url": url, "size": asset.Size, "sha256": strings.TrimPrefix(asset.Digest, "sha256:")}, nil
@@ -87,11 +87,11 @@ func (b *Backend) checkUpdates(ctx context.Context, arch string, force bool) (ob
 	}
 	ctx, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
-	headers := http.Header{"Accept": []string{"application/vnd.github+json"}, "User-Agent": []string{"PredatorVPN/" + appVersion}, "X-GitHub-Api-Version": []string{"2022-11-28"}}
+	headers := http.Header{"Accept": []string{"application/vnd.github+json"}, "User-Agent": []string{"Namaki/" + appVersion}, "X-GitHub-Api-Version": []string{"2022-11-28"}}
 	if u.etag != "" {
 		headers.Set("If-None-Match", u.etag)
 	}
-	raw, h, status, err := b.fetch(ctx, "https://api.github.com/repos/erfan-tahvilian/PredatorVPN/releases/latest", "GET", nil, headers)
+	raw, h, status, err := b.fetch(ctx, "https://api.github.com/repos/meiyou313/Namaki/releases/latest", "GET", nil, headers)
 	if err != nil {
 		return nil, errors.New("Could not check for updates. Try again later")
 	}

@@ -66,6 +66,9 @@ type dashboard struct {
 	// measured by handleTest/handleDelay; /api/status reports it so the
 	// home page's delay is a real measurement, not 0ms.
 	lastTest object
+	// lastPingedAt is when the last location ping run finished (RFC3339);
+	// the servers page re-tests when it is missing or older than 10 min.
+	lastPingedAt string
 	// token is the X-Local-Token value the Flutter UI must send. It is
 	// generated per app start by the Android host and written to
 	// <dataDir>/local-api.token before StartDashboard is called.
@@ -313,7 +316,9 @@ func (d *dashboard) statusJSON() object {
 			"message": "", "service_version": "", "installed": true,
 			"programs_supported": false, "refused_udp": "",
 		},
-		"update":         object{"state": "idle", "version": "", "done": 0, "total": 0, "error": ""},
+		// No "update" here: the core has no update feed wired on Android,
+		// and a present-but-idle update hides the app's own Download
+		// button (the home page shows it only when status.update is null).
 		"auto_connecting": false,
 		"connect_pending": yes(snap, "busy"),
 		"connect_failure": func() string {
@@ -436,6 +441,18 @@ func (d *dashboard) setLastTest(t object) {
 	d.mu.Unlock()
 }
 
+func (d *dashboard) getLastPingedAt() string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.lastPingedAt
+}
+
+func (d *dashboard) setLastPingedAt(at string) {
+	d.mu.Lock()
+	d.lastPingedAt = at
+	d.mu.Unlock()
+}
+
 // --- Handlers ---
 
 func (d *dashboard) handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -496,17 +513,23 @@ func (d *dashboard) locationsJSON() object {
 		if code == "" {
 			continue
 		}
-		ping := int64(num(lat, str(srv, "id")))
+		// Latencies are objects {"ms": ..., "reason": ...} (backend.go),
+		// not plain numbers: unwrap them, or every ping reads as 0 and
+		// the list shows "—" forever.
+		entry := obj(lat, str(srv, "id"))
+		ping := int64(num(entry, "ms"))
+		pingErr := str(entry, "reason")
 		if cur, ok := byCountry[code]; ok {
 			if ping > 0 && (int64(num(cur, "ping_ms")) == 0 || ping < int64(num(cur, "ping_ms"))) {
 				cur["ping_ms"] = ping
+				cur["ping_error"] = ""
 			}
 			continue
 		}
 		byCountry[code] = object{
 			"code": code, "name": str(srv, "country"),
 			"city": str(srv, "city"), "server": str(srv, "host"),
-			"recommended": false, "ping_ms": ping, "ping_error": "",
+			"recommended": false, "ping_ms": ping, "ping_error": pingErr,
 		}
 		order = append(order, code)
 	}
@@ -518,7 +541,7 @@ func (d *dashboard) locationsJSON() object {
 	for _, code := range order {
 		locations = append(locations, byCountry[code])
 	}
-	return object{"locations": locations, "pinged_at": ""}
+	return object{"locations": locations, "pinged_at": d.getLastPingedAt()}
 }
 
 func (d *dashboard) handleLocations(w http.ResponseWriter, r *http.Request) {
@@ -557,6 +580,7 @@ func (d *dashboard) handlePingLocations(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	// Re-read latencies through locationsJSON() after the pings.
+	d.setLastPingedAt(time.Now().UTC().Format(time.RFC3339))
 	writeJSON(w, http.StatusOK, d.locationsJSON())
 }
 
@@ -583,7 +607,7 @@ func (d *dashboard) handleSetLocation(w http.ResponseWriter, r *http.Request) {
 			if srv == nil {
 				continue
 			}
-			ms := int64(num(lat, str(srv, "id")))
+			ms := int64(num(obj(lat, str(srv, "id")), "ms"))
 			if ms > 0 && (bestMs == 0 || ms < bestMs) {
 				bestID, bestMs = str(srv, "id"), ms
 			}
