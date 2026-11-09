@@ -228,6 +228,8 @@ class Traffic {
   Traffic.fromJson(Map<String, Object?> j)
     : up = _int(j['up']),
       down = _int(j['down']),
+      totalUp = _int(j['total_up']),
+      totalDown = _int(j['total_down']),
       directUp = _int(j['direct_up']),
       directDown = _int(j['direct_down']),
       upRate = _int(j['up_rate']),
@@ -235,6 +237,14 @@ class Traffic {
 
   final int up;
   final int down;
+
+  /// The totals since the app was first installed (the core's
+  /// totalTraffic, persisted with its vault): the usage history
+  /// accumulates these into daily/weekly/monthly charts. Session
+  /// [up]/[down] reset on every reconnect, so they cannot be summed.
+  final int totalUp;
+  final int totalDown;
+
   final int directUp;
   final int directDown;
   final int upRate;
