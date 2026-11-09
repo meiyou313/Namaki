@@ -111,7 +111,7 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 	if code == "" || str(auth, "state") != state {
 		return fail(errors.New("Invalid OAuth authorization response"))
 	}
-	token, err := b.jsonRequest(ctx, "https://oauth.accounts.firefox.com/v1/token", "POST", object{
+	token, _, err := b.jsonRequest(ctx, "https://oauth.accounts.firefox.com/v1/token", "POST", object{
 		"client_id": clientID, "grant_type": "authorization_code",
 		"code": code, "code_verifier": verifier,
 	}, "")
