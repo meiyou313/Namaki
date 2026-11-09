@@ -8,6 +8,7 @@ import 'core/android_core.dart';
 import 'core/core_api.dart';
 import 'core/core_controller.dart';
 import 'core/updates.dart';
+import 'core/usage_history.dart';
 import 'core/core_process.dart';
 import 'core/ports.dart';
 import 'core/tun_service.dart';
@@ -49,6 +50,7 @@ Future<void> main(List<String> args) async {
   final navigatorKey = GlobalKey<NavigatorState>();
   // Before the desktop's: a version installed at the start goes first.
   Updates.start(core, settings, args: args);
+  UsageHistory.start(dataDir, core);
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     DesktopIntegration(
       core: core,
@@ -89,5 +91,6 @@ Future<void> runAndroid() async {
     onHide: () => core.onScreen = false,
   );
   Updates.start(core, settings);
+  UsageHistory.start(dataDir, core);
   runApp(VpnApp(core: core, settings: settings));
 }

@@ -49,7 +49,7 @@ String linuxName(String platformVersion) =>
     'Linux-${platformVersion.contains('arm64') ? 'arm64' : 'amd64'}.tar.gz';
 
 /// The name part of the release file that [os]'s app installs or downloads
-/// (`Arman-VPN-<version>-<part>`); a release that has it was built for
+/// (`meiyou-<version>-<part>`); a release that has it was built for
 /// [os]. null for another system.
 String? releaseFilePart(String os) => switch (os) {
   'windows' => 'Windows-x64.zip',
@@ -114,7 +114,7 @@ Future<Release?> checkForUpdate({
         ? 'https://github.com/$repo/releases'
         : '$srv/releases';
     final part = releaseFilePart(system);
-    final file = part == null ? 'SHA256SUMS.txt' : 'Merged-VPN-$wanted-$part';
+    final file = part == null ? 'SHA256SUMS.txt' : 'meiyou-$wanted-$part';
     if (!await _published(client, '$releases/download/v$wanted/$file')) {
       throw HttpException('version $wanted is not published yet');
     }
@@ -194,7 +194,7 @@ Future<(int, String)> _get(
       .timeout(const Duration(seconds: 20));
   req.headers
     ..set(HttpHeaders.acceptHeader, accept)
-    ..set(HttpHeaders.userAgentHeader, 'arman-vpn/$appVersion');
+    ..set(HttpHeaders.userAgentHeader, 'meiyou/$appVersion');
   final res = await req.close().timeout(const Duration(seconds: 20));
   final body = await res
       .transform(utf8.decoder)
