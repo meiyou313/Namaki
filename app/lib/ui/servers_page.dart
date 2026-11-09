@@ -35,6 +35,13 @@ class _ServersPageState extends State<ServersPage> {
   String _country = '';
   bool _testing = false;
 
+  /// The locations' poll while a delay test runs.
+  Timer? _pollTimer;
+
+  /// The locations measured in the test now running, so their numbers show
+  /// at once instead of the spinner.
+  final _measured = <String>{};
+
   /// The choice being saved ('' recommended, 'fastest', or a code).
   String? _busy;
   String? _summary;
@@ -49,6 +56,12 @@ class _ServersPageState extends State<ServersPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -94,6 +107,7 @@ class _ServersPageState extends State<ServersPage> {
   }
 
   Future<void> _test() async {
+    if (_testing) return;
     final l = AppLocalizations.of(context);
     final codes = [
       for (final loc in _locations ?? const <Location>[]) loc.code,
@@ -101,11 +115,24 @@ class _ServersPageState extends State<ServersPage> {
     setState(() {
       _testing = true;
       _summary = null;
+      _measured.clear();
+    });
+    // The core measures the countries and answers only when all are done;
+    // meanwhile its locations answer shows each number the moment it was
+    // measured, so poll it while the test runs.
+    final probe = _core.call(
+      (api) => api.pingLocations(codes, target: widget.settings.pingTarget),
+    );
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+      unawaited(_poll());
     });
     try {
-      final result = await _core.call((api) => api.pingLocations(codes));
-      final tested = {for (final loc in result.locations) loc.code: loc};
+      final result = await probe;
       if (!mounted) return;
+      _pollTimer?.cancel();
+      _pollTimer = null;
+      final tested = {for (final loc in result.locations) loc.code: loc};
       setState(() {
         _locations = [
           for (final loc in _locations ?? const <Location>[])
@@ -121,8 +148,45 @@ class _ServersPageState extends State<ServersPage> {
     } on CoreUnavailable catch (e) {
       if (mounted) showError(context, describeProblem(l, e));
     } finally {
+      _pollTimer?.cancel();
+      _pollTimer = null;
       if (mounted) setState(() => _testing = false);
     }
+  }
+
+  /// Merges the locations the core has measured so far into the list, so
+  /// each row shows its number the moment it lands. A failed poll is
+  /// silent; the test's own answer carries the error, if any.
+  Future<void> _poll() async {
+    if (!mounted || !_testing) return;
+    try {
+      final list = await _core.call((api) => api.locations());
+      if (!mounted || !_testing) return;
+      final measured = {for (final loc in list.locations) loc.code: loc};
+      final answered = {
+        for (final loc in list.locations)
+          if (loc.answered) loc.code,
+      };
+      setState(() {
+        _locations = [
+          for (final loc in _locations ?? const <Location>[])
+            measured[loc.code] ?? loc,
+        ];
+        _measured.addAll(answered);
+      });
+    } on CoreApiException {
+      // Silent: the next poll tries again.
+    } on CoreUnavailable {
+      // Silent: same.
+    }
+  }
+
+  /// The probe address for the delay test: saved, then measured at once
+  /// with it, so the menu shows that address's numbers.
+  void _pickTarget(String target) {
+    if (target == widget.settings.pingTarget || _testing) return;
+    widget.settings.update(pingTarget: target);
+    unawaited(_test());
   }
 
   /// Every country, without Mozilla's recommended location (the choice
@@ -179,7 +243,11 @@ class _ServersPageState extends State<ServersPage> {
               subtitle: l.modeRecommendedHint,
               delay: recommended == null
                   ? null
-                  : _Delay(location: recommended, testing: _testing),
+                  : _Delay(
+                      location: recommended,
+                      testing: _testing,
+                      fresh: _measured.contains(recommended.code),
+                    ),
               selected: chosen == '',
               busy: _busy == '',
               onTap: () => _choose(''),
@@ -197,17 +265,27 @@ class _ServersPageState extends State<ServersPage> {
         const SizedBox(height: 20),
         _SectionHeader(
           title: l.locationsSection,
-          action: TextButton.icon(
-            onPressed: !_testing && _locations != null && !noAccounts
-                ? _test
-                : null,
-            icon: _testing
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.speed_rounded, size: 18),
-            label: Text(_testing ? l.testingDelay : l.testDelay),
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _PingTargetMenu(
+                current: widget.settings.pingTarget,
+                enabled: !_testing && _locations != null && !noAccounts,
+                onSelected: _pickTarget,
+              ),
+              TextButton.icon(
+                onPressed: !_testing && _locations != null && !noAccounts
+                    ? _test
+                    : null,
+                icon: _testing
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.speed_rounded, size: 18),
+                label: Text(_testing ? l.testingDelay : l.testDelay),
+              ),
+            ],
           ),
         ),
         if (delayLine != null)
@@ -230,7 +308,11 @@ class _ServersPageState extends State<ServersPage> {
                   leading: CountryFlag(code: loc.code, width: 36),
                   title: locationName(l, loc.code, loc.name),
                   subtitle: _subtitle(loc),
-                  delay: _Delay(location: loc, testing: _testing),
+                  delay: _Delay(
+                    location: loc,
+                    testing: _testing,
+                    fresh: _measured.contains(loc.code),
+                  ),
                   selected: chosen == loc.code.toLowerCase(),
                   busy: _busy?.toLowerCase() == loc.code.toLowerCase(),
                   onTap: () => _choose(loc.code),
@@ -407,13 +489,17 @@ class _ChoiceRow extends StatelessWidget {
 
 /// A location's real delay as a small badge in its color. While the delays
 /// are measured, a small spinner instead of the last results, which may be
-/// old (a measurement while offline answers nothing). A location that did
+/// old (a measurement while offline answers nothing) — except a number
+/// measured in this run ([fresh]), which shows at once. A location that did
 /// not answer is grey, not red: it says nothing is wrong with the app.
 class _Delay extends StatelessWidget {
-  const _Delay({required this.location, required this.testing});
+  const _Delay({required this.location, required this.testing, this.fresh = false});
 
   final Location location;
   final bool testing;
+
+  /// True when this location was measured in the test now running.
+  final bool fresh;
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +507,8 @@ class _Delay extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
     final loc = location;
-    final (text, color) = testing
+    final showValue = !testing || fresh;
+    final (text, color) = !showValue
         ? ('', muted)
         : loc.answered
         ? (l.milliseconds(loc.pingMs), delayColor(loc.pingMs))
@@ -434,18 +521,65 @@ class _Delay extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: testing
-          ? SizedBox.square(
-              dimension: 12,
-              child: CircularProgressIndicator(strokeWidth: 1.5, color: muted),
-            )
-          : Text(
+      child: showValue
+          ? Text(
               text,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: color,
                 fontWeight: FontWeight.w700,
               ),
+            )
+          : SizedBox.square(
+              dimension: 12,
+              child: CircularProgressIndicator(strokeWidth: 1.5, color: muted),
             ),
     );
   }
 }
+
+/// The probe address the delay test measures through, as a small settings
+/// menu beside the test button. The names are the services' own, so no
+/// translation.
+class _PingTargetMenu extends StatelessWidget {
+  const _PingTargetMenu({
+    required this.current,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final String current;
+  final bool enabled;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.settings_rounded),
+      iconSize: 18,
+      tooltip: l.navSettings,
+      enabled: enabled,
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final entry in _pingTargets.entries)
+          CheckedPopupMenuItem<String>(
+            value: entry.key,
+            checked: entry.key == current,
+            child: Text(entry.value),
+          ),
+      ],
+    );
+  }
+}
+
+/// The probe addresses the delay test can measure through: the short id
+/// the core knows, and the service's own name.
+const _pingTargets = <String, String>{
+  'telegram': 'Telegram',
+  'youtube': 'YouTube',
+  'instagram': 'Instagram',
+  'x': 'X',
+  'facebook': 'Facebook',
+  'tiktok': 'TikTok',
+  'bbc': 'BBC',
+};

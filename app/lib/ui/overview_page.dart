@@ -1204,14 +1204,6 @@ class _PhoneHome extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  // Accounts shortcut, top-right (first child in RTL).
-                  IconButton(
-                    icon: const Icon(Icons.people_outline_rounded),
-                    color: p.text,
-                    tooltip: l.navAccounts,
-                    onPressed: () =>
-                        _openAccounts(context, core, settings, onOpenAccounts),
-                  ),
                   const AppLogo(size: 28),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1232,7 +1224,7 @@ class _PhoneHome extends StatelessWidget {
                           child: Opacity(
                             opacity: 0.65,
                             child: Text(
-                              'In memory of my dear hen Namaki',
+                              'Gone but Never Forgotten – My Dear Chicken, Namaki',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: p.text,
                               ),
@@ -1241,6 +1233,14 @@ class _PhoneHome extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                  // Accounts shortcut, top-right (last child).
+                  IconButton(
+                    icon: const Icon(Icons.people_outline_rounded),
+                    color: p.text,
+                    tooltip: l.navAccounts,
+                    onPressed: () =>
+                        _openAccounts(context, core, settings, onOpenAccounts),
                   ),
                 ],
               ),

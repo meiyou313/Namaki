@@ -302,7 +302,7 @@ class _ShellState extends State<Shell> {
                             child: Opacity(
                               opacity: 0.65,
                               child: Text(
-                                'In memory of my dear hen Namaki',
+                                'Gone but Never Forgotten – My Dear Chicken, Namaki',
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
                             ),
