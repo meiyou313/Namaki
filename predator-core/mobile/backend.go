@@ -466,6 +466,77 @@ func (b *Backend) Call(channel, argsJSON string) string {
 		}
 	case "ping":
 		err = b.ping(ctx, text(0))
+	case "delay":
+		// The delay of the current connection: a small GET through the
+		// active tunnel (dashboard.go: measureDelay, for /api/test and
+		// /api/delay). realDelay reuses the live session when it can.
+		b.mu.Lock()
+		t := b.tunnel
+		conn := b.connection
+		b.mu.Unlock()
+		if t == nil || conn != "connected" {
+			err = errors.New("Connect first")
+		} else {
+			var ms int64
+			ms, err = t.realDelay(ctx, "https://web.telegram.org/favicon.ico")
+			if err == nil {
+				result = object{"ms": ms}
+			}
+		}
+	case "refreshAccount":
+		// Re-reads the active account's profile and quota from Mozilla
+		// (refreshProfile). The id is accepted for the API shape;
+		// Predator refreshes the active account.
+		result, err = b.refreshProfile(ctx)
+	case "setAccountEnabled":
+		// Predator has no per-account enabled flag; the dashboard keeps
+		// the disabled ids in accountPreferences ("disabledAccounts"),
+		// saved with the backend's state.
+		v, _ := arg(0).(map[string]any)
+		id := str(v, "id")
+		enabled := yes(v, "enabled")
+		b.mu.Lock()
+		disabled := []any{}
+		for _, x := range list(b.accountPreferences, "disabledAccounts") {
+			if s, ok := x.(string); ok && s != id {
+				disabled = append(disabled, s)
+			}
+		}
+		if !enabled && id != "" {
+			disabled = append(disabled, id)
+		}
+		b.accountPreferences["disabledAccounts"] = disabled
+		b.mu.Unlock()
+		err = b.save()
+	case "orderAccounts":
+		var ids []string
+		if arr, ok := arg(0).([]any); ok {
+			for _, a := range arr {
+				if s, ok := a.(string); ok && s != "" {
+					ids = append(ids, s)
+				}
+			}
+		}
+		b.mu.Lock()
+		byID := map[string]object{}
+		for _, a := range b.accounts {
+			byID[str(a, "id")] = a
+		}
+		ordered := []object{}
+		for _, id := range ids {
+			if a, ok := byID[id]; ok {
+				ordered = append(ordered, a)
+				delete(byID, id)
+			}
+		}
+		for _, a := range b.accounts {
+			if _, ok := byID[str(a, "id")]; ok {
+				ordered = append(ordered, a)
+			}
+		}
+		b.accounts = ordered
+		b.mu.Unlock()
+		err = b.save()
 	case "connect":
 		err = b.connect()
 		result = b.EngineConfig()
@@ -814,11 +885,17 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 			if ctx.Err() != nil {
 				return
 			}
-			pctx, cancel := context.WithTimeout(ctx, 35*time.Second)
+			// A dead server fails fast (15s): the location list has
+			// ~30 countries, and a 35s timeout each made the whole
+			// ping run outlast the app's 150s budget.
+			pctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 			defer cancel()
 			probe := newTunnel(b, settings, server, token, pctx)
 			defer probe.close()
-			delay, err := probe.realDelay(pctx, "https://www.google.com/generate_204")
+			// web.telegram.org: google.com/generate_204 was unreachable
+			// where the app is used, so every location ping timed out
+			// and no latency was ever measured.
+			delay, err := probe.realDelay(pctx, "https://web.telegram.org/favicon.ico")
 			var latency any
 			if err == nil {
 				latency = delay
