@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's ring, connected: a white disc with a bright green ring.
+  This is the finished frame of widget_ring_on_anim, so launchers that
+  do not animate the vector show the same picture.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:inset="2dp">
+    <shape android:shape="oval">
+        <solid android:color="#FFFFFFFF" />
+        <stroke
+            android:width="2.5dp"
+            android:color="#00E676" />
+    </shape>
+</inset>

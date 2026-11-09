@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's ring, connected, animated: the green ring sweeps in
+  clockwise from the top when the VPN connects. On launchers that do
+  not animate vectors in widgets, the vector's default frame is shown
+  instead, which is the same finished picture as widget_ring_on.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/widget_ring_vector">
+    <target
+        android:name="ring"
+        android:animation="@animator/widget_ring_draw" />
+</animated-vector>
