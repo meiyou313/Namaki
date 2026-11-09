@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home-screen widget's card colors, one set per state: dark grey
+     while off, amber while connecting, bright green while connected. -->
+<resources>
+    <color name="widget_off_card">#FF1F2937</color>
+    <color name="widget_off_card_stroke">#FF374151</color>
+    <color name="widget_off_title">#FFF9FAFB</color>
+    <color name="widget_off_status">#FF9CA3AF</color>
+
+    <color name="widget_connecting_card">#FFF59E0B</color>
+    <color name="widget_connecting_card_stroke">#FFD97706</color>
+    <color name="widget_connecting_title">#FF1F2937</color>
+    <color name="widget_connecting_status">#FF78350F</color>
+
+    <color name="widget_on_card_start">#FF00E676</color>
+    <color name="widget_on_card_end">#FF00C853</color>
+    <color name="widget_on_card_stroke">#FF00A844</color>
+    <color name="widget_on_title">#FFFFFFFF</color>
+    <color name="widget_on_status">#FFDCFCE7</color>
+</resources>

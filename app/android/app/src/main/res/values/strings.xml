@@ -13,4 +13,8 @@
     <string name="widget_description">Connect or disconnect with one tap</string>
     <string name="widget_connect">Tap to connect</string>
     <string name="widget_disconnect">Tap to disconnect</string>
+    <!-- The widget's status line, shown under the app name. -->
+    <string name="widget_status_off">خاموش</string>
+    <string name="widget_status_connecting">در حال اتصال…</string>
+    <string name="widget_status_connected">متصل</string>
 </resources>
