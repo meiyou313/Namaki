@@ -1,61 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The widget picker's preview (Android 12+): the card, connected. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The widget picker's preview (Android 12+): the circle, connected. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_card_on"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="10dp"
-    android:paddingEnd="12dp"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:layout_height="match_parent">
 
-    <!-- The chick launcher icon. -->
+    <!-- The white disc and the bright green ring. -->
     <ImageView
-        android:id="@+id/widget_icon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:id="@+id/widget_ring"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@drawable/widget_ring_on" />
 
-    <!-- The name and the state line. -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="8dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/widget_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="@string/app_name"
-            android:textColor="@color/widget_on_title"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/widget_status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="@string/widget_status_connected"
-            android:textColor="@color/widget_on_status"
-            android:textSize="11sp" />
-    </LinearLayout>
-
-    <!-- The state icon: a check. -->
+    <!-- The hen, a little smaller than the disc so a white rim shows. -->
     <ImageView
-        android:id="@+id/widget_state_icon"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
+        android:id="@+id/widget_hen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="4dp"
         android:contentDescription="@null"
         android:scaleType="fitCenter"
-        android:src="@drawable/widget_state_on" />
-</LinearLayout>
+        android:src="@drawable/widget_hen" />
+</FrameLayout>
