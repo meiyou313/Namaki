@@ -3,7 +3,7 @@
 // + Arman VPN Flutter UI (GPL-3.0, armanlife).
 //
 // PredatorApp is FoxApp.java from PredatorVPN v2.0.0, adapted:
-//  - package com.mergedvpn.client, application name "meiyou"
+//  - package com.mergedvpn.client, application name "Namaki"
 //  - the WebView MainActivity is gone: the UI is Arman's Flutter
 //    MainActivity (same package). State changes go to PredatorBridge
 //    instead of MainActivity.receive().
@@ -126,7 +126,7 @@ public final class PredatorApp extends Application implements Host {
             catalog.execute(() -> backend.call("servers", "[]"));
         } catch (Exception e) {
             backend = null;
-            initializationError = "The core could not start (" + e + "). Restart meiyou or reinstall if the problem persists.";
+            initializationError = "The core could not start (" + e + "). Restart Namaki or reinstall if the problem persists.";
             android.util.Log.e("PredatorApp", "backend init failed", e);
         }
     }
