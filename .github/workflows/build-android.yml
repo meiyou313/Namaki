@@ -2,7 +2,7 @@
 # Namaki — Flutter UI + Go core.
 #
 # Builds Android, Windows, and Linux on GitHub Actions and publishes
-# them on one v3.2.0 GitHub release (Releases tab): the APKs, the
+# them on one v3.3.0 GitHub release (Releases tab): the APKs, the
 # Windows portable zip, and the Linux archive.
 #
 # The Windows and Linux apps start a desktop core (arman-vpn-core) from
@@ -140,12 +140,12 @@ jobs:
           mkdir -p out
           cd app
           flutter pub get
-          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=3.2.0
+          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=3.3.0
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/namaki-3.2.0-Android-$abi.apk"
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/namaki-3.3.0-Android-$abi.apk"
           done
-          flutter build apk --release --dart-define=APP_VERSION=3.2.0
-          cp build/app/outputs/flutter-apk/app-release.apk ../out/namaki-3.2.0-Android-universal.apk
+          flutter build apk --release --dart-define=APP_VERSION=3.3.0
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/namaki-3.3.0-Android-universal.apk
       - name: Remove the key
         if: always()
         run: rm -f app/android/release.jks app/android/key.properties
@@ -179,22 +179,22 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build windows --release --dart-define=APP_VERSION=3.2.0
+          flutter build windows --release --dart-define=APP_VERSION=3.3.0
           if (-not (Test-Path 'build/windows/x64/runner/Release/d3dcompiler_47.dll')) { throw 'd3dcompiler_47.dll is not in the build: the window would stay empty on some copies of Windows' }
       - name: Build the desktop core and TUN service
         shell: pwsh
         working-directory: upstream-core/core
         env:
-          APP_VERSION: 3.2.0
+          APP_VERSION: 3.3.0
           CGO_ENABLED: '0'
         run: |
           $core = "$env:GITHUB_WORKSPACE/app/build/windows/x64/runner/Release/core"
           New-Item -ItemType Directory -Force $core | Out-Null
-          $ldflags = '-s -w -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=3.2.0'
+          $ldflags = '-s -w -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=3.3.0'
           go generate ./cmd/arman-vpn-core
           go build -trimpath -ldflags $ldflags -o "$core/arman-vpn-core.exe" ./cmd/arman-vpn-core
           go generate ./cmd/arman-vpn-tun
-          go build -tags with_gvisor -trimpath -ldflags "-s -w -H windowsgui -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=3.2.0" -o "$core/arman-vpn-tun.exe" ./cmd/arman-vpn-tun
+          go build -tags with_gvisor -trimpath -ldflags "-s -w -H windowsgui -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=3.3.0" -o "$core/arman-vpn-tun.exe" ./cmd/arman-vpn-tun
       - name: Package the portable zip
         shell: pwsh
         run: |
@@ -203,11 +203,11 @@ jobs:
           New-Item -ItemType Directory -Force $stage | Out-Null
           Copy-Item 'app/build/windows/x64/runner/Release/*' $stage -Recurse
           Copy-Item 'LICENSE' $stage
-          Compress-Archive -Path $stage -DestinationPath 'out/namaki-3.2.0-Windows-x64.zip' -CompressionLevel Optimal
+          Compress-Archive -Path $stage -DestinationPath 'out/namaki-3.3.0-Windows-x64.zip' -CompressionLevel Optimal
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: out/namaki-3.2.0-Windows-x64.zip
+          path: out/namaki-3.3.0-Windows-x64.zip
           if-no-files-found: error
 
   linux:
@@ -237,12 +237,12 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build linux --release --dart-define=APP_VERSION=3.2.0
+          flutter build linux --release --dart-define=APP_VERSION=3.3.0
       - name: Build the desktop core and TUN service
         working-directory: upstream-core/core
         run: |
           module=github.com/armanlife/arman-vpn-client/core
-          ldflags="-s -w -X $module/internal/version.Current=3.2.0"
+          ldflags="-s -w -X $module/internal/version.Current=3.3.0"
           dest="$GITHUB_WORKSPACE/app/build/linux/x64/release/bundle/core"
           mkdir -p "$dest"
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$ldflags" -o "$dest/arman-vpn-core" ./cmd/arman-vpn-core
@@ -252,11 +252,11 @@ jobs:
           mkdir -p out/stage
           cp -r app/build/linux/x64/release/bundle out/stage/Namaki
           cp LICENSE out/stage/Namaki/LICENSE
-          tar -czf out/namaki-3.2.0-Linux-amd64.tar.gz -C out/stage --owner=0 --group=0 Namaki
+          tar -czf out/namaki-3.3.0-Linux-amd64.tar.gz -C out/stage --owner=0 --group=0 Namaki
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: out/namaki-3.2.0-Linux-amd64.tar.gz
+          path: out/namaki-3.3.0-Linux-amd64.tar.gz
           if-no-files-found: error
 
   release:
@@ -270,12 +270,12 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.2.0
-          name: Namaki 3.2.0
+          tag_name: v3.3.0
+          name: Namaki 3.3.0
           body: |
-            Namaki 3.2.0.
+            Namaki 3.3.0.
             Install the APK for your phone's processor (arm64-v8a for most modern phones), or the universal one.
-            On Windows, unpack namaki-3.2.0-Windows-x64.zip anywhere and run the app inside the Namaki folder.
-            On Linux, unpack namaki-3.2.0-Linux-amd64.tar.gz and run the app inside the Namaki folder.
+            On Windows, unpack namaki-3.3.0-Windows-x64.zip anywhere and run the app inside the Namaki folder.
+            On Linux, unpack namaki-3.3.0-Linux-amd64.tar.gz and run the app inside the Namaki folder.
           files: out/*
           fail_on_unmatched_files: true
