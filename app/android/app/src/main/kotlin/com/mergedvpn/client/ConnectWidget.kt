@@ -12,11 +12,13 @@ import android.util.Log
 import android.widget.RemoteViews
 
 /**
- * The home-screen widget: one round button that turns the VPN on or off,
- * like the Quick Settings tile. Its color shows the state: green when
- * connected, amber while connecting, grey when off. PredatorBridge calls
- * [updateAll] whenever the state changes; after a reboot the process is
- * new, PredatorBridge.isOn() is false, and the system's update shows it off.
+ * The home-screen widget: a small 2x1 card with the chick, the app name,
+ * a status line and a state icon; tapping anywhere on the card turns the
+ * VPN on or off, like the Quick Settings tile. The card's color shows the
+ * state at a glance: dark grey when off, amber while connecting, bright
+ * green when connected. PredatorBridge calls [updateAll] whenever the
+ * state changes; after a reboot the process is new, PredatorBridge.isOn()
+ * is false, and the system's update shows it off.
  */
 class ConnectWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
@@ -25,9 +27,8 @@ class ConnectWidget : AppWidgetProvider() {
         manager.updateAppWidget(ids, views(context, shown))
     }
 
-    /**
-     * The button's tap. Not exported (unlike the provider, which receives
-     * the system's broadcasts), so other apps cannot turn the VPN on or off.
+    /** The card's tap. Not exported (unlike the provider, which receives
+     *  the system's broadcasts), so other apps cannot turn the VPN on or off.
      */
     class Toggle : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -60,7 +61,7 @@ class ConnectWidget : AppWidgetProvider() {
         }
     }
 
-    /** What the button shows; [needsApp]: a tap opens the app (no VPN permission). */
+    /** What the card shows; [needsApp]: a tap opens the app (no VPN permission). */
     private data class Shown(val state: Int, val needsApp: Boolean)
 
     companion object {
@@ -107,16 +108,64 @@ class ConnectWidget : AppWidgetProvider() {
 
         private fun views(context: Context, shown: Shown): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_connect)
-            views.setImageViewResource(
-                R.id.widget_button,
+            // The whole card is the toggle: its background, text colors
+            // and icon all follow the state, so the state is obvious at
+            // a glance. setBackgroundResource is reached through setInt,
+            // as RemoteViews has no direct background setter.
+            views.setInt(
+                R.id.widget_root,
+                "setBackgroundResource",
                 when (shown.state) {
-                    CONNECTED -> R.drawable.widget_button_on
-                    CONNECTING -> R.drawable.widget_button_connecting
-                    else -> R.drawable.widget_button_off
+                    CONNECTED -> R.drawable.widget_card_on
+                    CONNECTING -> R.drawable.widget_card_connecting
+                    else -> R.drawable.widget_card_off
                 },
             )
+            views.setTextViewText(
+                R.id.widget_status,
+                context.getString(
+                    when (shown.state) {
+                        CONNECTED -> R.string.widget_status_connected
+                        CONNECTING -> R.string.widget_status_connecting
+                        else -> R.string.widget_status_off
+                    },
+                ),
+            )
+            views.setTextColor(
+                R.id.widget_title,
+                context.getColor(
+                    when (shown.state) {
+                        CONNECTED -> R.color.widget_on_title
+                        CONNECTING -> R.color.widget_connecting_title
+                        else -> R.color.widget_off_title
+                    },
+                ),
+            )
+            views.setTextColor(
+                R.id.widget_status,
+                context.getColor(
+                    when (shown.state) {
+                        CONNECTED -> R.color.widget_on_status
+                        CONNECTING -> R.color.widget_connecting_status
+                        else -> R.color.widget_off_status
+                    },
+                ),
+            )
+            // The state icon is an animated vector: on launchers that
+            // animate them it draws in when the state changes; on the
+            // rest its end frame is the static picture.
+            views.setImageViewResource(
+                R.id.widget_state_icon,
+                when (shown.state) {
+                    CONNECTED -> R.drawable.widget_state_on
+                    CONNECTING -> R.drawable.widget_state_connecting
+                    else -> R.drawable.widget_state_off
+                },
+            )
+            // The description sits on the card itself now, as the card
+            // is the clickable element.
             views.setContentDescription(
-                R.id.widget_button,
+                R.id.widget_root,
                 context.getString(if (shown.state == OFF) R.string.widget_connect else R.string.widget_disconnect),
             )
             // Without the VPN permission the tap opens the app directly (an
@@ -133,7 +182,7 @@ class ConnectWidget : AppWidgetProvider() {
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
                 )
             }
-            views.setOnClickPendingIntent(R.id.widget_button, tap)
+            views.setOnClickPendingIntent(R.id.widget_root, tap)
             return views
         }
 
