@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# meiyou — Arman Flutter UI + PredatorVPN Go core.
+# Namaki — Flutter UI + Go core.
 #
 # Builds the Android APK on GitHub Actions, uploads it as an artifact
-# and publishes it on the v3.0.0 GitHub release (Releases tab).
+# and publishes it on the v3.1.0 GitHub release (Releases tab).
 #
 # Trigger it with: Actions > Build Android > Run workflow.
 # No signing secrets are needed: without them the APKs are signed with
-# the debug key (like Arman's CI). For a release key, add these secrets:
+# the debug key. For a release key, add these secrets:
 #   ANDROID_KEYSTORE_BASE64    the .jks file, base64-encoded
 #   ANDROID_KEYSTORE_PASSWORD  its password (PKCS12: also the key's)
 name: Build Android
@@ -84,7 +84,7 @@ jobs:
         with:
           path: app/android/app/libs/
           key: merged-native-go1.26.9-ndk28-${{ hashFiles('predator-core/mobile/**/*.go', 'predator-core/engine/**/*.go', 'predator-core/tools.go', 'predator-core/go.mod', 'predator-core/go.sum') }}
-      - name: Build native Android library (Predator core -> foxvpn.aar)
+      - name: Build native Android library (Go core -> foxvpn.aar)
         if: steps.native-cache.outputs.cache-hit != 'true'
         working-directory: predator-core
         run: |
@@ -129,12 +129,12 @@ jobs:
           mkdir -p out
           cd app
           flutter pub get
-          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=3.0.0
+          flutter build apk --release --split-per-abi --dart-define=APP_VERSION=3.1.0
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/meiyou-3.0.0-Android-$abi.apk"
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/namaki-3.1.0-Android-$abi.apk"
           done
-          flutter build apk --release --dart-define=APP_VERSION=3.0.0
-          cp build/app/outputs/flutter-apk/app-release.apk ../out/meiyou-3.0.0-Android-universal.apk
+          flutter build apk --release --dart-define=APP_VERSION=3.1.0
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/namaki-3.1.0-Android-universal.apk
       - name: Remove the key
         if: always()
         run: rm -f app/android/release.jks app/android/key.properties
@@ -146,10 +146,10 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v3.0.0
-          name: meiyou 3.0.0
+          tag_name: v3.1.0
+          name: Namaki 3.1.0
           body: |
-            meiyou 3.0.0 — Predator core + Arman UI.
+            Namaki 3.1.0.
             Install the APK for your phone's processor (arm64-v8a for most modern phones), or the universal one.
           files: out/*.apk
           fail_on_unmatched_files: true
