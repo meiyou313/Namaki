@@ -20,8 +20,8 @@ func TestUpdateVersionsAndMatchingAndroidPackages(t *testing.T) {
 		t.Fatal("Prerelease accepted")
 	}
 	for _, arch := range []string{"arm64-v8a", "armeabi-v7a", "x86_64", "x86", "universal"} {
-		name := "PredatorVPN-1.0.2-Android-" + arch + ".apk"
-		asset := object{"name": name, "browser_download_url": "https://github.com/erfan-tahvilian/PredatorVPN/releases/download/v1.0.2/" + name, "state": "uploaded", "size": 1024, "digest": "sha256:" + strings.Repeat("ab", 32)}
+		name := "namaki-1.0.2-Android-" + arch + ".apk"
+		asset := object{"name": name, "browser_download_url": "https://github.com/meiyou313/Namaki/releases/download/v1.0.2/" + name, "state": "uploaded", "size": 1024, "digest": "sha256:" + strings.Repeat("ab", 32)}
 		release := object{"tag_name": "v1.0.2", "draft": false, "prerelease": false, "assets": []object{asset}}
 		raw, _ := json.Marshal(release)
 		result, err := selectAndroidRelease(raw, "1.0.1", arch)
