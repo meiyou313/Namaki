@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget picker's picture on older Android (Android 12+ uses the
+  preview layout instead): the connected green card with its check.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/widget_card_on" />
+    <item
+        android:drawable="@drawable/widget_state_on_vector"
+        android:width="32dp"
+        android:height="32dp"
+        android:gravity="center" />
+</layer-list>

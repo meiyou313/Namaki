@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's state icon, off, animated: the power sign fades in and
+  pops to full size when the VPN turns off. On launchers that do not
+  animate vectors in widgets, the vector's default frame is shown
+  instead, which is the same finished picture.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/widget_state_off_vector">
+    <target
+        android:name="powerGroup"
+        android:animation="@animator/widget_power_pop" />
+    <target
+        android:name="power"
+        android:animation="@animator/widget_power_fade" />
+</animated-vector>

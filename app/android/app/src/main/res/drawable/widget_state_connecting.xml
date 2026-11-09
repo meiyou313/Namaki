@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's state icon, connecting: three white dots. Kept a plain
+  vector on purpose: the connecting state is brief, and a looping
+  animation in a widget would keep waking the launcher for no benefit.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,24m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0M24,24m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0M36,24m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's state icon, off: a white power sign. Fully opaque by
+  default, so launchers that do not animate the vector still show it;
+  the animated version (widget_state_off) fades and pops it in. The icon
+  is Material's, in a 24x24 group centred in the 48x48 viewport; its
+  pivot is the icon's own centre, so the pop-in scales around it.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <group
+        android:name="powerGroup"
+        android:pivotX="12"
+        android:pivotY="12"
+        android:translateX="12"
+        android:translateY="12">
+        <path
+            android:name="power"
+            android:fillColor="#FFFFFFFF"
+            android:fillAlpha="1"
+            android:pathData="M13,3h-2v10h2L13,3zM17.83,5.17l-1.42,1.42C17.99,7.86 19,9.81 19,12c0,3.87 -3.13,7 -7,7s-7,-3.13 -7,-7c0,-2.19 1.01,-4.14 2.58,-5.42L6.17,5.17C4.23,6.82 3,9.26 3,12c0,4.97 4.03,9 9,9s9,-4.03 9,-9c0,-2.74 -1.23,-5.18 -3.17,-6.83z" />
+    </group>
+</vector>

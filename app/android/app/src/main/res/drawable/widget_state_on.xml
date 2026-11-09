@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's state icon, connected, animated: the check draws itself in
+  while its ring expands and fades away, like a ripple. On launchers that
+  do not animate vectors in widgets, the vector's default frame is shown
+  instead, which is the same finished picture.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/widget_state_on_vector">
+    <target
+        android:name="check"
+        android:animation="@animator/widget_check_draw" />
+    <target
+        android:name="ringGroup"
+        android:animation="@animator/widget_ring_expand" />
+    <target
+        android:name="ring"
+        android:animation="@animator/widget_ring_fade" />
+</animated-vector>

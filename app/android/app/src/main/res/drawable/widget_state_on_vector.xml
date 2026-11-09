@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The widget's state icon, connected: a white check mark inside a soft
+  ring. The check is fully drawn by default, so launchers that do not
+  animate the vector still show the finished picture; the animated
+  version (widget_state_on) draws the check in and lets the ring radiate
+  outwards. The check is Material's, in a 24x24 group centred in the
+  48x48 viewport.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- The radiating ring: it expands and fades when the state changes;
+         on launchers that do not animate it, it stays as a soft circle. -->
+    <group
+        android:name="ringGroup"
+        android:pivotX="24"
+        android:pivotY="24">
+        <path
+            android:name="ring"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M24,4a20,20 0,1 1,0 40a20,20 0,1 1,0 -40z"
+            android:strokeWidth="2.5"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeAlpha="0.55" />
+    </group>
+    <!-- The check, fully drawn by default. -->
+    <group
+        android:name="checkGroup"
+        android:translateX="12"
+        android:translateY="12">
+        <path
+            android:name="check"
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M9,16.17L4.83,12l-1.41,1.41L9,19 21,7l-1.41,-1.41z"
+            android:trimPathEnd="1" />
+    </group>
+</vector>
