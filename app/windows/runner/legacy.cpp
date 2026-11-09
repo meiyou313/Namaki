@@ -13,9 +13,9 @@ namespace legacy {
 namespace {
 
 constexpr wchar_t kOldExe[] = L"firefox-vpn.exe";
-constexpr wchar_t kNewExe[] = L"arman-vpn.exe";
+constexpr wchar_t kNewExe[] = L"namaki.exe";
 constexpr wchar_t kOldShortcut[] = L"Firefox VPN.lnk";
-constexpr wchar_t kNewShortcut[] = L"Arman VPN.lnk";
+constexpr wchar_t kNewShortcut[] = L"Namaki.lnk";
 
 // This executable's path, and its folder with a trailing backslash.
 std::wstring SelfPath() {
