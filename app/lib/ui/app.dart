@@ -287,10 +287,28 @@ class _ShellState extends State<Shell> {
                   children: [
                     const AppLogo(size: 34),
                     const SizedBox(width: 10),
-                    Text(
-                      l.appTitle,
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l.appTitle,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Opacity(
+                              opacity: 0.65,
+                              child: Text(
+                                'In memory of my dear hen Namaki',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

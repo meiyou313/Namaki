@@ -42,6 +42,43 @@ class MobileShell extends StatefulWidget {
 class _MobileShellState extends State<MobileShell> {
   int _tab = 0;
 
+  /// Opens the accounts page once, on the first status that shows no
+  /// account at all: a fresh install has nothing to connect with, so the
+  /// accounts screen is where the app should start.
+  bool _accountsOpenedOnce = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.core.addListener(_maybeOpenAccounts);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _maybeOpenAccounts(),
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.core.removeListener(_maybeOpenAccounts);
+    super.dispose();
+  }
+
+  void _maybeOpenAccounts() {
+    if (_accountsOpenedOnce) return;
+    final status = widget.core.status;
+    if (status == null || status.totalAccounts != 0) return;
+    _accountsOpenedOnce = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openAccountsPage();
+    });
+  }
+
+  /// Opens the accounts page under a top bar; the home page's buttons use
+  /// this too.
+  void _openAccountsPage() => _push(
+    AppLocalizations.of(context).navAccounts,
+    () => AccountsPage(core: widget.core, settings: widget.settings),
+  );
+
   /// Opens [page] under a top bar named [title]; it follows the core.
   void _push(String title, Widget Function() page) {
     Navigator.of(context).push(
@@ -76,10 +113,7 @@ class _MobileShellState extends State<MobileShell> {
     final settings = widget.settings;
     void openServers() =>
         _push(l.navServers, () => ServersPage(core: core, settings: settings));
-    void openAccounts() => _push(
-      l.navAccounts,
-      () => AccountsPage(core: core, settings: settings),
-    );
+    void openAccounts() => _openAccountsPage();
     void openUsage() =>
         _push(l.usageTitle, () => UsagePage(core: core));
     void openConnection() => _push(
