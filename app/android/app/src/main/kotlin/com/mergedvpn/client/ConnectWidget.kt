@@ -12,11 +12,12 @@ import android.util.Log
 import android.widget.RemoteViews
 
 /**
- * The home-screen widget: a small 2x1 card with the chick, the app name,
- * a status line and a state icon; tapping anywhere on the card turns the
- * VPN on or off, like the Quick Settings tile. The card's color shows the
- * state at a glance: dark grey when off, amber while connecting, bright
- * green when connected. PredatorBridge calls [updateAll] whenever the
+ * The home-screen widget: a small circular 1x1 button — the hen on a
+ * white disc with a state ring (near-black off, amber connecting, bright
+ * green connected). Tapping anywhere on the circle turns the VPN on or
+ * off, like the Quick Settings tile; the ring shows the state at a
+ * glance. When the VPN connects, the green ring sweeps in
+ * (widget_ring_on_anim). PredatorBridge calls [updateAll] whenever the
  * state changes; after a reboot the process is new, PredatorBridge.isOn()
  * is false, and the system's update shows it off.
  */
@@ -27,7 +28,7 @@ class ConnectWidget : AppWidgetProvider() {
         manager.updateAppWidget(ids, views(context, shown))
     }
 
-    /** The card's tap. Not exported (unlike the provider, which receives
+    /** The circle's tap. Not exported (unlike the provider, which receives
      *  the system's broadcasts), so other apps cannot turn the VPN on or off.
      */
     class Toggle : BroadcastReceiver() {
@@ -108,62 +109,21 @@ class ConnectWidget : AppWidgetProvider() {
 
         private fun views(context: Context, shown: Shown): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_connect)
-            // The whole card is the toggle: its background, text colors
-            // and icon all follow the state, so the state is obvious at
-            // a glance. setBackgroundResource is reached through setInt,
-            // as RemoteViews has no direct background setter.
-            views.setInt(
-                R.id.widget_root,
-                "setBackgroundResource",
-                when (shown.state) {
-                    CONNECTED -> R.drawable.widget_card_on
-                    CONNECTING -> R.drawable.widget_card_connecting
-                    else -> R.drawable.widget_card_off
-                },
-            )
-            views.setTextViewText(
-                R.id.widget_status,
-                context.getString(
-                    when (shown.state) {
-                        CONNECTED -> R.string.widget_status_connected
-                        CONNECTING -> R.string.widget_status_connecting
-                        else -> R.string.widget_status_off
-                    },
-                ),
-            )
-            views.setTextColor(
-                R.id.widget_title,
-                context.getColor(
-                    when (shown.state) {
-                        CONNECTED -> R.color.widget_on_title
-                        CONNECTING -> R.color.widget_connecting_title
-                        else -> R.color.widget_off_title
-                    },
-                ),
-            )
-            views.setTextColor(
-                R.id.widget_status,
-                context.getColor(
-                    when (shown.state) {
-                        CONNECTED -> R.color.widget_on_status
-                        CONNECTING -> R.color.widget_connecting_status
-                        else -> R.color.widget_off_status
-                    },
-                ),
-            )
-            // The state icon is an animated vector: on launchers that
-            // animate them it draws in when the state changes; on the
-            // rest its end frame is the static picture.
+            // The whole circle is the toggle; only its ring follows the
+            // state, so the state is obvious at a glance. The connected
+            // ring is an animated vector: on launchers that animate them
+            // it sweeps in when the VPN connects; on the rest its end
+            // frame is the static picture (widget_ring_on).
             views.setImageViewResource(
-                R.id.widget_state_icon,
+                R.id.widget_ring,
                 when (shown.state) {
-                    CONNECTED -> R.drawable.widget_state_on
-                    CONNECTING -> R.drawable.widget_state_connecting
-                    else -> R.drawable.widget_state_off
+                    CONNECTED -> R.drawable.widget_ring_on_anim
+                    CONNECTING -> R.drawable.widget_ring_connecting
+                    else -> R.drawable.widget_ring_off
                 },
             )
-            // The description sits on the card itself now, as the card
-            // is the clickable element.
+            // The description sits on the circle itself now, as the
+            // circle is the clickable element.
             views.setContentDescription(
                 R.id.widget_root,
                 context.getString(if (shown.state == OFF) R.string.widget_connect else R.string.widget_disconnect),
