@@ -394,10 +394,17 @@ class CoreApi {
 
   /// Tests the real delay of [codes] (all when empty) through the tunnel;
   /// the proxy must run (409 otherwise). It can take two minutes.
-  Future<LocationList> pingLocations(List<String> codes) async =>
-      LocationList.fromJson(
-        await _json('POST', '/api/locations/ping', {'codes': codes}, _slowest),
-      );
+  /// [target] is the probe address's short id (telegram, youtube, ...);
+  /// the core uses its default when omitted.
+  Future<LocationList> pingLocations(
+    List<String> codes, {
+    String? target,
+  }) async => LocationList.fromJson(
+    await _json('POST', '/api/locations/ping', {
+      'codes': codes,
+      if (target != null && target.isNotEmpty) 'target': target,
+    }, _slowest),
+  );
 
   /// Chooses the location: a country code, `fastest`, or empty for the
   /// recommended one. The proxy restarts.
