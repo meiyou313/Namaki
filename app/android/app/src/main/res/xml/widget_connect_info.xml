@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The home-screen widget: a small 2x1 card showing the chick, the app
-  name and the state; tapping anywhere on it toggles the VPN. It is
-  updated when the state changes (ConnectWidget.updateAll), so it needs
-  no periodic update; after a reboot the system's update shows it off.
+  The home-screen widget: a small circular 1x1 button showing the hen
+  on a white disc with a state ring (near-black off, amber connecting,
+  bright green connected); tapping it toggles the VPN. It is updated
+  when the state changes (ConnectWidget.updateAll), so it needs no
+  periodic update; after a reboot the system's update shows it off.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
+    android:minWidth="40dp"
     android:minHeight="40dp"
-    android:targetCellWidth="2"
+    android:targetCellWidth="1"
     android:targetCellHeight="1"
     android:resizeMode="none"
     android:updatePeriodMillis="0"
