@@ -2,6 +2,8 @@
 
 An Android, Windows, and Linux VPN app. Its interface comes from the Arman VPN client and
 its engine from PredatorVPN — the two are combined here into one app.
+The browser sign-in flow follows the approach of FoxyVPN
+(https://github.com/Vauth/FoxyVPN).
 
 This is an unofficial, GPL-licensed app. It is not affiliated with
 Mozilla or with either of the projects above. See `NOTICE.md` for the
@@ -11,12 +13,12 @@ sources, the license, and what was changed.
 
 Open the **Releases** tab and download the file for your device:
 
-- `namaki-3.2.0-Android-arm64-v8a.apk` — most modern phones (install this one)
-- `namaki-3.2.0-Android-armeabi-v7a.apk` — older 32-bit phones
-- `namaki-3.2.0-Android-x86_64.apk` — emulators / x86 phones
-- `namaki-3.2.0-Android-universal.apk` — all architectures, bigger
-- `namaki-3.2.0-Windows-x64.zip` — Windows: unpack it anywhere and run the app inside the `Namaki` folder
-- `namaki-3.2.0-Linux-amd64.tar.gz` — Linux: unpack it and run the app inside the `Namaki` folder
+- `namaki-3.3.0-Android-arm64-v8a.apk` — most modern phones (install this one)
+- `namaki-3.3.0-Android-armeabi-v7a.apk` — older 32-bit phones
+- `namaki-3.3.0-Android-x86_64.apk` — emulators / x86 phones
+- `namaki-3.3.0-Android-universal.apk` — all architectures, bigger
+- `namaki-3.3.0-Windows-x64.zip` — Windows: unpack it anywhere and run the app inside the `Namaki` folder
+- `namaki-3.3.0-Linux-amd64.tar.gz` — Linux: unpack it and run the app inside the `Namaki` folder
 
 The Windows and Linux apps carry their core with them (a `core` folder
 beside the app) — keep it with the app.
