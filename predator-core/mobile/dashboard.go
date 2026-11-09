@@ -548,6 +548,32 @@ func (d *dashboard) handleLocations(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, d.locationsJSON())
 }
 
+// pingTargets maps the short ids the app's ping-target menu sends to the
+// favicon URL each location is probed with. Every one of these is blocked
+// in Iran (OONI, October 2026), so a probe that answers must have gone
+// through the VPN tunnel: an unfiltered address could answer directly and
+// give a fake ping. Nothing else may be added here.
+var pingTargets = map[string]string{
+	"telegram":  telegramProbeURL,
+	"youtube":   "https://www.youtube.com/favicon.ico",
+	"instagram": "https://www.instagram.com/favicon.ico",
+	"x":         "https://x.com/favicon.ico",
+	"facebook":  "https://www.facebook.com/favicon.ico",
+	"tiktok":    "https://www.tiktok.com/favicon.ico",
+	"bbc":       "https://www.bbc.com/favicon.ico",
+}
+
+const defaultPingTarget = "telegram"
+
+// pingTargetURL returns the probe URL for the short id the app sends,
+// the telegram probe when the id is unknown or empty.
+func pingTargetURL(id string) string {
+	if u, ok := pingTargets[id]; ok {
+		return u
+	}
+	return pingTargets[defaultPingTarget]
+}
+
 func (d *dashboard) handlePingLocations(w http.ResponseWriter, r *http.Request) {
 	body := readBody(r)
 	codes := []string{}
@@ -556,29 +582,27 @@ func (d *dashboard) handlePingLocations(w http.ResponseWriter, r *http.Request) 
 			codes = append(codes, s)
 		}
 	}
+	target := pingTargetURL(str(body, "target"))
 	snap := d.snapshot()
-	// Predator pings one server id at a time; ping the first server of
-	// each requested country. "REC" is skipped: it is not a real server.
-	// A dead server costs up to 15s, so a long list could outlast the
-	// app's 150s budget and the whole test would fail with nothing
-	// measured: stop starting new pings after 100s and report what was
-	// measured so far.
-	started := time.Now()
+	// Ping the first server of each requested country ("REC" is not a
+	// real server) in a single backend call: the backend probes three
+	// at a time and records each latency as it is measured, so the app
+	// can poll /api/locations and show each result as it lands instead
+	// of waiting for the whole list.
+	ids := []string{}
 	for _, code := range codes {
 		if code == "REC" {
 			continue
 		}
-		if time.Since(started) > 100*time.Second {
-			break
-		}
 		for _, v := range list(snap, "servers") {
 			srv, _ := v.(map[string]any)
 			if srv != nil && str(srv, "code") == code {
-				_, _ = d.call("ping", str(srv, "id"))
+				ids = append(ids, str(srv, "id"))
 				break
 			}
 		}
 	}
+	_, _ = d.call("ping", object{"ids": ids, "target": target})
 	// Re-read latencies through locationsJSON() after the pings.
 	d.setLastPingedAt(time.Now().UTC().Format(time.RFC3339))
 	writeJSON(w, http.StatusOK, d.locationsJSON())

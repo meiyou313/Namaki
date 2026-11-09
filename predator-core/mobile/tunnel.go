@@ -797,7 +797,7 @@ func (t *proxyTunnel) exit(ctx context.Context, expected string) (object, error)
 	if expected != "" && expected != "REC" && !strings.EqualFold(expected, country) {
 		return nil, fmt.Errorf("Exit mismatch: expected %s, received %s", expected, country)
 	}
-	result := object{"ip": ip, "country": country, "ipv4": "", "ipv6": "", "pending": true}
+	result := object{"ip": ip, "country": country, "country_code": country, "ipv4": "", "ipv6": "", "pending": true}
 	if net.ParseIP(ip).To4() != nil {
 		result["ipv4"] = ip
 	} else {

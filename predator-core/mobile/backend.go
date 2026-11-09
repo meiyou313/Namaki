@@ -315,11 +315,18 @@ func (b *Backend) Call(channel, argsJSON string) string {
 		return envelope(result, err)
 	}
 	if channel == "ping" {
-		id := ""
+		// The dashboard's location check sends {"ids": [...], "target":
+		// url}; anything else is the old single-id form ("" for every
+		// server).
 		if len(args) > 0 {
-			id, _ = args[0].(string)
+			if v, ok := args[0].(map[string]any); ok {
+				return envelope(nil, b.pingMany(context.Background(), pingIDs(v), validPingTargetURL(str(v, "target"))))
+			}
+			if id, ok := args[0].(string); ok {
+				return envelope(nil, b.ping(context.Background(), id))
+			}
 		}
-		return envelope(nil, b.ping(context.Background(), id))
+		return envelope(nil, b.ping(context.Background(), ""))
 	}
 	if channel == "selectAccount" || channel == "logout" || channel == "removeAccount" || channel == "settings" {
 		b.stopPings()
@@ -465,7 +472,13 @@ func (b *Backend) Call(channel, argsJSON string) string {
 			err = b.save()
 		}
 	case "ping":
-		err = b.ping(ctx, text(0))
+		// Unreachable in practice: the early "ping" branch above handles
+		// the channel first. Kept in step with it.
+		if v, ok := arg(0).(map[string]any); ok {
+			err = b.pingMany(ctx, pingIDs(v), validPingTargetURL(str(v, "target")))
+		} else {
+			err = b.ping(ctx, text(0))
+		}
 	case "delay":
 		// The delay of the current connection: a small GET through the
 		// active tunnel (dashboard.go: measureDelay, for /api/test and
@@ -814,7 +827,16 @@ func (b *Backend) stopPings() {
 		b.emit()
 	}
 }
-func (b *Backend) ping(ctx context.Context, id string) error {
+// pingMany probes the servers with the given ids (every server when ids
+// is nil) through the probe at target, three at a time, recording each
+// latency as it is measured so the app can show results as they land.
+// The target is validated: anything but one of the allowed probe URLs
+// falls back to the telegram probe.
+func (b *Backend) pingMany(ctx context.Context, ids []string, target string) error {
+	target = validPingTargetURL(target)
+	if ids != nil && len(ids) == 0 {
+		return nil
+	}
 	b.mu.Lock()
 	if b.pingCancel != nil {
 		b.mu.Unlock()
@@ -831,12 +853,14 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 	epoch := b.pingEpoch
 	settings := copyObject(b.settings)
 	servers := append([]object{}, b.servers...)
-	if id == "" {
+	if ids == nil {
 		b.latencies = object{}
 		b.pinging = true
 	} else {
-		delete(b.latencies, id)
-		b.pingingIDs = []string{id}
+		for _, id := range ids {
+			delete(b.latencies, id)
+		}
+		b.pingingIDs = ids
 	}
 	b.mu.Unlock()
 	b.emit()
@@ -865,11 +889,18 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 			return err
 		}
 	}
-	found := id == ""
+	// A long list could outlast the app's 150s budget: stop starting new
+	// probes after 100s and report what was measured so far.
+	started := time.Now()
+	want := map[string]bool{}
+	for _, id := range ids {
+		want[id] = true
+	}
+	found := ids == nil
 	var wg sync.WaitGroup
 	limit := make(chan struct{}, 3)
 	for _, s := range servers {
-		if id != "" && str(s, "id") != id {
+		if ids != nil && !want[str(s, "id")] {
 			continue
 		}
 		found = true
@@ -885,6 +916,9 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 			if ctx.Err() != nil {
 				return
 			}
+			if time.Since(started) > 100*time.Second {
+				return
+			}
 			// A dead server fails fast (15s): the location list has
 			// ~30 countries, and a 35s timeout each made the whole
 			// ping run outlast the app's 150s budget.
@@ -892,10 +926,10 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 			defer cancel()
 			probe := newTunnel(b, settings, server, token, pctx)
 			defer probe.close()
-			// web.telegram.org: google.com/generate_204 was unreachable
-			// where the app is used, so every location ping timed out
-			// and no latency was ever measured.
-			delay, err := probe.realDelay(pctx, "https://web.telegram.org/favicon.ico")
+			// The probe goes through the tunnel to a filtered address:
+			// a direct answer would fake the ping, so only the allowed
+			// targets (dashboard.go: pingTargets) are used.
+			delay, err := probe.realDelay(pctx, target)
 			var latency any
 			if err == nil {
 				latency = delay
@@ -924,6 +958,37 @@ func (b *Backend) ping(ctx context.Context, id string) error {
 		return errors.New("Unknown location")
 	}
 	return nil
+}
+
+// ping probes one location (every server when id is "") through the
+// telegram probe, as before.
+func (b *Backend) ping(ctx context.Context, id string) error {
+	if id == "" {
+		return b.pingMany(ctx, nil, pingTargets[defaultPingTarget])
+	}
+	return b.pingMany(ctx, []string{id}, pingTargets[defaultPingTarget])
+}
+
+// validPingTargetURL returns u when it is one of the allowed probe URLs,
+// and the telegram probe otherwise.
+func validPingTargetURL(u string) string {
+	for _, allowed := range pingTargets {
+		if u == allowed {
+			return u
+		}
+	}
+	return pingTargets[defaultPingTarget]
+}
+
+// pingIDs reads the "ids" list of a ping-many request.
+func pingIDs(v object) []string {
+	ids := []string{}
+	for _, x := range list(v, "ids") {
+		if s, ok := x.(string); ok && s != "" {
+			ids = append(ids, s)
+		}
+	}
+	return ids
 }
 func (b *Backend) LogExport() string {
 	b.mu.Lock()
