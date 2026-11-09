@@ -2,7 +2,7 @@ name: merged_vpn
 description: "Merged VPN: Arman VPN Flutter UI on the PredatorVPN Go core"
 publish_to: 'none'
 
-version: 2.0.0+200
+version: 3.0.0+300
 
 environment:
   sdk: ^3.13.5
@@ -36,6 +36,8 @@ flutter:
   assets:
     # The fox shield beside the app's name (tool/app_icons.py).
     - assets/logo.png
+    # The portrait in the prayer card at the end of the settings.
+    - assets/dua.png
     - assets/tray/
     # Country flags from flag-icons (MIT, assets/flags/LICENSE), the same
     # SVG files as the core's web dashboard.
