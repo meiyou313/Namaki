@@ -30,6 +30,7 @@ class OverviewPage extends StatelessWidget {
     required this.settings,
     this.onOpenServers,
     this.onOpenAccounts,
+    this.onOpenUsage,
     this.onOpenConnection,
     this.onOpenUpstreamProxy,
     this.phone = false,
@@ -45,6 +46,9 @@ class OverviewPage extends StatelessWidget {
   /// page on the phone, a tab on the computer).
   final VoidCallback? onOpenServers;
   final VoidCallback? onOpenAccounts;
+
+  /// Opens the data usage page from the home page's data card.
+  final VoidCallback? onOpenUsage;
 
   /// Opens the connection settings, when Mozilla's servers are blocked.
   final VoidCallback? onOpenConnection;
@@ -62,6 +66,7 @@ class OverviewPage extends StatelessWidget {
         settings: settings,
         onOpenServers: onOpenServers,
         onOpenAccounts: onOpenAccounts,
+        onOpenUsage: onOpenUsage,
         onOpenConnection: onOpenConnection,
         onOpenUpstreamProxy: onOpenUpstreamProxy,
       );
@@ -73,6 +78,7 @@ class OverviewPage extends StatelessWidget {
       settings: settings,
       onOpenServers: onOpenServers,
       onOpenAccounts: onOpenAccounts,
+      onOpenUsage: onOpenUsage,
       onOpenConnection: onOpenConnection,
       onOpenUpstreamProxy: onOpenUpstreamProxy,
     );
@@ -275,6 +281,7 @@ class _DesktopHome extends StatelessWidget {
     required this.settings,
     this.onOpenServers,
     this.onOpenAccounts,
+    this.onOpenUsage,
     this.onOpenConnection,
     this.onOpenUpstreamProxy,
   });
@@ -287,6 +294,7 @@ class _DesktopHome extends StatelessWidget {
   final AppSettings settings;
   final VoidCallback? onOpenServers;
   final VoidCallback? onOpenAccounts;
+  final VoidCallback? onOpenUsage;
   final VoidCallback? onOpenConnection;
   final VoidCallback? onOpenUpstreamProxy;
 
@@ -414,7 +422,7 @@ class _DesktopHome extends StatelessWidget {
       _HomeData(
         status: status,
         palette: p,
-        onTap: onOpenAccounts,
+        onTap: onOpenUsage,
         compact: true,
       ),
     ];
@@ -1042,6 +1050,7 @@ class _PhoneHome extends StatelessWidget {
     required this.settings,
     this.onOpenServers,
     this.onOpenAccounts,
+    this.onOpenUsage,
     this.onOpenConnection,
     this.onOpenUpstreamProxy,
   });
@@ -1054,6 +1063,7 @@ class _PhoneHome extends StatelessWidget {
   final AppSettings settings;
   final VoidCallback? onOpenServers;
   final VoidCallback? onOpenAccounts;
+  final VoidCallback? onOpenUsage;
   final VoidCallback? onOpenConnection;
   final VoidCallback? onOpenUpstreamProxy;
 
@@ -1399,7 +1409,7 @@ class _PhoneHome extends StatelessWidget {
                         child: _HomeData(
                           status: status,
                           palette: p,
-                          onTap: onOpenAccounts,
+                          onTap: onOpenUsage,
                           compact: true,
                         ),
                       ),
@@ -1414,7 +1424,7 @@ class _PhoneHome extends StatelessWidget {
                   onTap: onOpenServers,
                 ),
                 const SizedBox(height: 12),
-                _HomeData(status: status, palette: p, onTap: onOpenAccounts),
+                _HomeData(status: status, palette: p, onTap: onOpenUsage),
               ],
             ],
           ),

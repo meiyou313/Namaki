@@ -63,6 +63,14 @@ String formatDate(AppLocalizations l, DateTime t) {
   return DateFormat.MMMd(l.localeName).format(t);
 }
 
+/// The month's name ("Aban", "November").
+String formatMonth(AppLocalizations l, DateTime t) {
+  if (l.localeName == 'fa') {
+    return _jalaliMonths[toJalali(t).month - 1];
+  }
+  return DateFormat.MMM(l.localeName).format(t);
+}
+
 /// A date with the year and the time, for list updates and such.
 String formatDateTime(AppLocalizations l, DateTime t) {
   if (l.localeName == 'fa') {

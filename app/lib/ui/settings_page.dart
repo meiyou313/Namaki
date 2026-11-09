@@ -159,6 +159,77 @@ class SettingsGroup extends StatelessWidget {
   }
 }
 
+/// The prayer card at the very end of the settings, as the user asked:
+/// the portrait beside a rounded card with the exact text in Vazirmatn
+/// Bold, laid out like the screenshot they sent (portrait on the left,
+/// text on the right).
+class _DuaCard extends StatelessWidget {
+  const _DuaCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Directionality(
+      // The screenshot's layout: portrait left, text right.
+      textDirection: TextDirection.ltr,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The portrait, with the screenshot's soft shadow.
+          Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/dua.png',
+                height: 190,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Directionality(
+                textDirection: TextDirection.rtl,
+                child: Text(
+                  'برای سلامتی و تعجیل در فرج آقا امام زمان (عجل الله تعالی فرجه الشریف) و شادی روح همه شهدا به‌ویژه شهید خامنه‌ای عزیز، صلواتی هدیه کنید.',
+                  style: TextStyle(
+                    fontFamily: 'Vazirmatn',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    height: 1.9,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SettingsPageState extends State<SettingsPage> {
   /// The section shown; null for the list of sections.
   late SettingsSection? _open = widget.section ?? widget.opening;
@@ -371,6 +442,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       row(Icons.receipt_long_outlined, l.navLogs, onOpenLogs),
                   ],
                 ),
+              // The prayer card at the very end of the settings.
+              const SizedBox(height: 24),
+              const _DuaCard(),
+              const SizedBox(height: 8),
             ],
           );
         }

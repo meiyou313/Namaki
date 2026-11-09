@@ -11,6 +11,7 @@ import 'logs_page.dart';
 import 'overview_page.dart';
 import 'servers_page.dart';
 import 'settings_page.dart';
+import 'usage_page.dart';
 import 'widgets.dart';
 
 /// The phone layout: two tabs, Home and Settings, as phone apps have. The
@@ -79,6 +80,8 @@ class _MobileShellState extends State<MobileShell> {
       l.navAccounts,
       () => AccountsPage(core: core, settings: settings),
     );
+    void openUsage() =>
+        _push(l.usageTitle, () => UsagePage(core: core));
     void openConnection() => _push(
       l.sectionConnection,
       () => SettingsPage(
@@ -103,6 +106,7 @@ class _MobileShellState extends State<MobileShell> {
                 settings: settings,
                 onOpenServers: openServers,
                 onOpenAccounts: openAccounts,
+                onOpenUsage: openUsage,
                 onOpenConnection: openConnection,
                 onOpenUpstreamProxy: openUpstreamProxy,
                 phone: true,
