@@ -5,6 +5,7 @@ app/android/app/libs/
 app/android/app/build/
 app/android/build/
 app/android/release.jks
+app/android/release.p12
 app/android/key.properties
 app/android/.gradle/
 app/android/local.properties

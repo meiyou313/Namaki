@@ -1,55 +1,104 @@
-# Namaki
+# Namaki | نمکی
 
-An Android, Windows, and Linux VPN app. Its interface comes from the Arman VPN client and
-its engine from PredatorVPN — the two are combined here into one app.
-The browser sign-in flow follows the approach of FoxyVPN
-(https://github.com/Vauth/FoxyVPN).
+> **Gone but Never Forgotten – My Dear Chicken, Namaki**
 
-This is an unofficial, GPL-licensed app. It is not affiliated with
-Mozilla or with either of the projects above. See `NOTICE.md` for the
-sources, the license, and what was changed.
+**نمکی** یک کلاینت غیررسمی برای **Mozilla VPN** است؛ برای اندروید، ویندوز و لینوکس.
+رابط کاربری آن از کلاینت **Arman VPN** و موتور آن از **PredatorVPN** گرفته شده و
+این دو در یک برنامه ترکیب شده‌اند. ورود با مرورگر، به روش **FoxyVPN**
+(https://github.com/Vauth/FoxyVPN) پیاده شده است.
 
-## Get the app
+این برنامه **غیررسمی** و **GPL** است و هیچ وابستگی‌ای به موزیلا یا به پروژه‌های بالا
+ندارد. منبع‌ها، مجوز و فهرست تغییرات را در `NOTICE.md` ببینید.
 
-Open the **Releases** tab and download the file for your device:
+## نمکی چیست؟
 
-- `namaki-3.3.0-Android-arm64-v8a.apk` — most modern phones (install this one)
-- `namaki-3.3.0-Android-armeabi-v7a.apk` — older 32-bit phones
-- `namaki-3.3.0-Android-x86_64.apk` — emulators / x86 phones
-- `namaki-3.3.0-Android-universal.apk` — all architectures, bigger
-- `namaki-3.3.0-Windows-x64.zip` — Windows: unpack it anywhere and run the app inside the `Namaki` folder
-- `namaki-3.3.0-Linux-amd64.tar.gz` — Linux: unpack it and run the app inside the `Namaki` folder
+نمکی به سرورهای **Mozilla VPN (Guardian)** وصل می‌شود و ترافیک دستگاه را از تونل
+**WireGuard** عبور می‌دهد. احراز هویت با حساب **Firefox (FxA)** انجام می‌شود و
+فهرست سرورها و پیکربندی تونل از سرویس Guardian گرفته می‌شود؛ هیچ سرور واسط
+دیگری در میان نیست و حساب و توکن‌ها فقط روی دستگاه شما می‌مانند.
 
-The Windows and Linux apps carry their core with them (a `core` folder
-beside the app) — keep it with the app.
+| ویژگی | توضیح |
+|---|---|
+| ورود با مرورگر (پیش‌فرض) | صفحه ورود فایرفاکس داخل خود برنامه باز می‌شود؛ توکن نشست از WebChannel گرفته و در هسته به توکن OAuth تبدیل می‌شود |
+| ورود با فرم | ایمیل و رمز عبور؛ رمز با PBKDF2 و HKDF هش می‌شود و هرگز به‌صورت خام فرستاده نمی‌شود |
+| عبور از محافظ ربات | وقتی موزیلا درخواست را با HTTP 406 رد می‌کند، هسته چالش Fastly (اثبات کار، PAT و client-metrics) را حل می‌کند و کوکی آن را نگه می‌دارد |
+| تست پینگ لوکیشن‌ها | پینگ هر لوکیشن همان لحظه که اندازه گرفته شد نشان داده می‌شود؛ آدرس تست از میان ۷ سرویس فیلترشده در ایران قابل انتخاب است (تلگرام، یوتیوب، اینستاگرام، X، فیسبوک، تیک‌تاک، BBC) |
+| مصرف داده | نمودارهای میله‌ای روزانه، هفتگی و ماهانه با انیمیشن (هفته از شنبه شروع می‌شود) |
+| ویجت صفحه اصلی | ویجت دایره‌ای ۱×۱؛ خاموش: حلقه مشکی، روشن: حلقه سبز پررنگ با انیمیشن |
+| اعلان به‌روزرسانی | برنامه نسخه جدید را از همین ریپو می‌خواند و روی صفحه اصلی خبر می‌دهد |
 
-Copy the APK to your phone and install it (allow "install unknown
-apps" for the file manager / browser once). Installing over an older
-Namaki version keeps your accounts — no need to uninstall first.
+## ورود به حساب — چطور کار می‌کند؟
 
-Without signing secrets the APKs are signed with the **debug key** —
-fine for installing on your own phone, not for publishing. For a
-release key, add the `ANDROID_KEYSTORE_BASE64` and
-`ANDROID_KEYSTORE_PASSWORD` secrets (see the workflow file).
+ورود پیش‌فرض **مرورگر** است، چون ورود مستقیم گاهی از طرف موزیلا رد می‌شود:
 
-## First run
+1. صفحه `accounts.firefox.com` داخل برنامه باز می‌شود و شما همان‌جا وارد حساب
+   فایرفاکس خود می‌شوید (شامل کد ایمیل یا کد دومرحله‌ای).
+2. صفحه، **توکن نشست** (۶۴ کاراکتر هگز) را از راه WebChannel به برنامه می‌دهد.
+3. هسته تا وقتی موزیلا نشست را «تأییدشده» گزارش کند صبر می‌کند
+   (`GET /v1/recovery_email/status` با احراز هویت Hawk).
+4. با **PKCE** (چالش `S256`) کد OAuth می‌گیرد و آن را در
+   `oauth.accounts.firefox.com/v1/token` به **access token** و **refresh token**
+   تبدیل می‌کند.
+5. توکن‌ها با همان سازوکاری ذخیره می‌شوند که ورود مستقیم استفاده می‌کند و
+   نشست مرورگر پس از اتمام از بین می‌رود.
 
-1. Open the app. If you have no account yet, it opens the **Accounts**
-   screen first — sign in with an **existing** Firefox account
-   (email + password). New-account sign-in may fail with HTTP 406;
-   that is a limitation of the core this app is built on.
-2. Pick a location, turn the VPN on, and check your IP changed.
-3. The home screen shows your data usage (daily / weekly / monthly),
-   and the widget on your home screen turns the VPN on and off.
+در صفحه **اکانت‌ها** می‌توانید روش ورود را بین «مرورگر» و «فرم» عوض کنید؛ در
+لینوکس که WebView نیست، فقط فرم در دسترس است. صفحه ورود مستقیم و بدون
+پروکسی وصل می‌شود.
 
-## Updates
+## معماری
 
-The app checks this repository (`meiyou313/Namaki`) for new releases
-and shows an update notice on the home screen when one is published.
-Every push to `main` builds the APKs, the Windows zip, and the Linux
-archive in GitHub Actions and publishes them on the new release.
+| لایه | فناوری | وظیفه |
+|---|---|---|
+| رابط کاربری | Flutter (Dart) | صفحه اصلی، اکانت‌ها، تنظیمات، ویجت، نمودار مصرف |
+| پل اندروید | Kotlin/Java + `foxvpn.aar` | سرویس VPN، ساخت توکن داشبورد، پورت‌های ۱۰۸۲۰ تا ۱۰۸۲۹ |
+| هسته | Go + sing-box (libbox) | تونل WireGuard، داشبورد HTTP روی `127.0.0.1` با هدر `X-Local-Token`، ورود و چالش Fastly |
+| احراز هویت | Firefox Accounts + OAuth 2.0 (PKCE) | نشست، کد تأیید، توکن‌ها؛ درخواست‌ها با Hawk امضا می‌شوند |
+| سرورها | Mozilla Guardian | فهرست لوکیشن‌ها و پیکربندی WireGuard |
 
-## Layout
+## دریافت برنامه
+
+از تب **Releases** فایل دستگاه خود را بگیرید:
+
+| پلتفرم | فایل | توضیح |
+|---|---|---|
+| اندروید (اکثر گوشی‌ها) | `namaki-3.4.0-Android-arm64-v8a.apk` | همین را نصب کنید |
+| اندروید (گوشی‌های قدیمی ۳۲ بیتی) | `namaki-3.4.0-Android-armeabi-v7a.apk` | — |
+| اندروید (امیولاتور / x86) | `namaki-3.4.0-Android-x86_64.apk` | — |
+| اندروید (همه معماری‌ها) | `namaki-3.4.0-Android-universal.apk` | بزرگ‌تر |
+| ویندوز | `namaki-3.4.0-Windows-x64.zip` | هرجا باز کنید و برنامه را در پوشه `Namaki` اجرا کنید |
+| لینوکس | `namaki-3.4.0-Linux-amd64.tar.gz` | باز کنید و برنامه را در پوشه `Namaki` اجرا کنید |
+
+نسخه‌های ویندوز و لینوکس هسته را با خودشان دارند (پوشه `core` کنار برنامه)؛
+آن را با برنامه نگه دارید. نسخه دسکتاپ نصب‌کننده ندارد (پرتابل است).
+
+فایل APK را به گوشی منتقل کنید و نصب کنید (برای فایل‌منیجر یا مرورگر،
+«نصب برنامه‌های ناشناس» را یک بار مجاز کنید).
+
+## نصب و به‌روزرسانی
+
+- **از نسخه ۳٫۴ به بعد** همه نسخه‌ها با یک **کلید امضای دائمی** (PKCS12،
+  در سکرت‌های ریپو) امضا می‌شوند؛ پس نسخه جدید **روی نسخه قبلی نصب می‌شود**
+  و اکانت‌ها می‌مانند؛ نیازی به حذف قبلی نیست.
+- **از ۳٫۳ (یا قدیمی‌تر) به ۳٫۴** یک بار باید نسخه قبلی را حذف کنید، چون
+  نسخه‌های تا ۳٫۳ با کلید دیباگی امضا می‌شدند که در هر بیلد عوض می‌شد و
+  اندروید نصب روی آن را قبول نمی‌کند. این آخرین باری است که حذف لازم است.
+- برنامه نسخه جدید را از فایل `.github/updates.json` همین ریپو (و آینه آن)
+  و API ریلیزهای گیت‌هاب می‌خواند و پیش از پیشنهاد، وجود فایل نسخه جدید را
+  هم بررسی می‌کند. هر پوش به `main` هر سه پلتفرم را در GitHub Actions
+  می‌سازد و روی یک ریلیز تازه منتشر می‌کند.
+
+## حریم خصوصی و امنیت
+
+- حساب، رمز عبور و توکن‌ها فقط روی دستگاه شما ذخیره می‌شوند؛ برنامه
+  هیچ سروری از خودش ندارد و چیزی را جایی نمی‌فرستد.
+- رمز عبور در ورود با فرم فقط به‌صورت هش‌شده (PBKDF2 + HKDF) فرستاده می‌شود.
+- درخواست‌های هسته به فایرفاکس با Hawk امضا می‌شوند و داشبورد محلی فقط با
+  توکن یک‌بارمصرف `X-Local-Token` پاسخ می‌دهد.
+- APKها با کلید انتشار دائمی امضا می‌شوند، نه کلید دیباگ؛ پس نسخه‌ها روی هم
+  نصب می‌شوند و جعل نسخه جدید بدون کلید ممکن نیست.
+
+## ساختار ریپو
 
 ```
 app/                  Flutter UI (Android, Windows, Linux)
@@ -60,14 +109,24 @@ predator-core/        Go core + HTTP adapter (dashboard on 127.0.0.1:10820)
 scripts/              android-notices.cjs — third-party Go notices
 ```
 
-The Windows and Linux apps run a desktop core built from the Arman VPN
-client repository (pinned commit, see the workflow file).
+نسخه‌های ویندوز و لینوکس هسته دسکتاپ را از ریپوی Arman VPN client
+می‌سازند (کامیت پین‌شده در فایل ورک‌فلو).
 
-## Build locally (optional)
+## ساخت دستی (اختیاری)
 
-Install Go 1.26.9, JDK 17, Flutter 3.47.7, Android SDK 36 +
-NDK 28.0.13004108, then follow the steps in
-`.github/workflows/build-android.yml` (gomobile bind, then
-`flutter build apk --release --split-per-abi`). The same file builds
-the Windows and Linux apps (Flutter desktop plus the desktop core
-from the Arman VPN client repository).
+Go 1.26.9 ،JDK 17 ،Flutter 3.47.7 ،Android SDK 36 و NDK 28.0.13004108 را
+نصب کنید و مرحله‌های `.github/workflows/build-android.yml` را دنبال کنید
+(gomobile bind و بعد `flutter build apk --release --split-per-abi`). همان
+فایل، نسخه‌های ویندوز و لینوکس را هم می‌سازد (Flutter دسکتاپ + هسته
+دسکتاپ از ریپوی Arman VPN client).
+
+## اعتبار و مجوز
+
+| پروژه | نقش |
+|---|---|
+| [PredatorVPN](https://github.com/erfan-tahvilian/PredatorVPN) (v2.0.0) | موتور و زیرساخت هسته |
+| [arman-vpn-client](https://github.com/armanlife/arman-vpn-client) | رابط کاربری |
+| [FoxyVPN](https://github.com/Vauth/FoxyVPN) | روش ورود با مرورگر |
+| Mozilla VPN / Firefox Accounts | سرویس VPN و احراز هویت (وابستگی ندارد) |
+
+مجوز: **GPL-3.0-or-later** — جزئیات در `NOTICE.md` و `LICENSE`.
