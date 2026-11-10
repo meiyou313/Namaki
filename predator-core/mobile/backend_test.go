@@ -4,12 +4,15 @@ package mobile
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -461,5 +464,76 @@ func TestExitVerificationCannotBeDisabled(t *testing.T) {
 	}
 	if !yes(s, "exitCheck") {
 		t.Fatal("exit verification must remain enabled")
+	}
+}
+
+// The core's TLS handshake must look like Firefox's, not Go's: the
+// account service's bot protection answers Go's ClientHello with a
+// CAPTCHA. A local server captures the ClientHello and checks the
+// server name and the cipher order Firefox uses.
+func TestDialTLSUsesFirefoxHello(t *testing.T) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := &x509.Certificate{SerialNumber: big.NewInt(1), NotBefore: time.Now().Add(-time.Hour), NotAfter: time.Now().Add(time.Hour), IPAddresses: []net.IP{net.ParseIP("127.0.0.1")}}
+	der, err := x509.CreateCertificate(rand.Reader, template, template, &key.PublicKey, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	leaf, err := x509.ParseCertificate(der)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pool := x509.NewCertPool()
+	pool.AddCert(leaf)
+	var hello *tls.ClientHelloInfo
+	ln, err := tls.Listen("tcp", "127.0.0.1:0", &tls.Config{
+		Certificates: []tls.Certificate{{Certificate: [][]byte{der}, PrivateKey: key, Leaf: leaf}},
+		GetConfigForClient: func(info *tls.ClientHelloInfo) (*tls.Config, error) {
+			hello = info
+			return nil, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	go http.Serve(ln, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) }))
+
+	b := NewBackend(&testHost{}, "{}")
+	b.roots = pool
+	conn, err := b.dialTLS(context.Background(), "tcp", ln.Addr().String())
+	if err != nil {
+		t.Fatalf("Firefox handshake failed: %v", err)
+	}
+	defer conn.Close()
+	// The connection must be usable for a plain request.
+	if _, err := conn.Write([]byte("GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n")); err != nil {
+		t.Fatal(err)
+	}
+	body, err := io.ReadAll(conn)
+	if err != nil || !strings.Contains(string(body), "ok") {
+		t.Fatalf("no reply over the Firefox handshake: %v %q", err, body)
+	}
+	if hello == nil {
+		t.Fatal("server never saw a ClientHello")
+	}
+	// No SNI is expected here: the test dials an IP literal, and a
+	// ClientHello never carries an IP as the server name. The live
+	// hosts are names, so their handshakes do carry one.
+	// Firefox offers ChaCha20 before AES-256-GCM; Go's own hello is
+	// the other way round.
+	chacha, aes256 := -1, -1
+	for i, suite := range hello.CipherSuites {
+		switch suite {
+		case tls.TLS_CHACHA20_POLY1305_SHA256:
+			chacha = i
+		case tls.TLS_AES_256_GCM_SHA384:
+			aes256 = i
+		}
+	}
+	if chacha < 0 || aes256 < 0 || chacha > aes256 {
+		t.Fatalf("cipher order is not Firefox's: %v", hello.CipherSuites)
 	}
 }

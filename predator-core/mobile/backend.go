@@ -15,6 +15,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	utls "github.com/metacubex/utls"
 )
 
 // Host is implemented by the mobile platform. Credentials never cross the WebView bridge.
@@ -144,8 +146,31 @@ func NewBackend(host Host, vault string) *Backend {
 	}}
 	b.dialer = &net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second, Control: control, Resolver: resolver}
 	jar, _ := cookiejar.New(nil)
-	b.client = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.dialer.DialContext, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	b.client = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.dialer.DialContext, DialTLSContext: b.dialTLS, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return b
+}
+
+// dialTLS opens the TLS connection the way a browser does. The TCP
+// connection still goes through the protected dialer (the same DNS and
+// socket protection as every other request), but the handshake is a
+// Firefox ClientHello (uTLS) instead of Go's own: Go's handshake is a
+// strong bot signal, and the account service answered it with a CAPTCHA
+// even when the same request from a browser fingerprint did not.
+func (b *Backend) dialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := b.dialer.DialContext(ctx, network, addr)
+	if err != nil {
+		return nil, err
+	}
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	uconn := utls.UClient(conn, &utls.Config{ServerName: host, RootCAs: b.roots, MinVersion: tls.VersionTLS12}, utls.HelloFirefox_Auto)
+	if err := uconn.HandshakeContext(ctx); err != nil {
+		conn.Close()
+		return nil, err
+	}
+	return uconn, nil
 }
 func (b *Backend) snapshotLocked() object {
 	s := copyObject(b.settings)

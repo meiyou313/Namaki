@@ -396,7 +396,16 @@ func solvePow(base, hash string) (string, error) {
 // (FoxyVPN's FastlyChallengeSolver tries the same combinations).
 var challengeHosts = []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com", "https://oauth.accounts.firefox.com"}
 
-const firefoxAndroidAgent = "Mozilla/5.0 (Android 14; Mobile; rv:145.0) Gecko/145.0 Firefox/145.0"
+const firefoxAndroidAgent = "Mozilla/5.0 (Android 14; Mobile; rv:159.0) Gecko/159.0 Firefox/159.0"
+
+// desktopAgent is a desktop Firefox, the last agent the solver tries:
+// a bare page fetch under a desktop browser's name scores as an ordinary
+// browser, where the account and mobile agents score as an app.
+const desktopAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
+
+// solveAgents is the order the solver tries when the account agent could
+// not clear a challenge: the browser agents, then the desktop one.
+var solveAgents = []string{firefoxAndroidAgent, desktopAgent}
 
 func (b *Backend) challenge(ctx context.Context) error {
 	jar, err := cookiejar.New(nil)
@@ -427,10 +436,16 @@ func (b *Backend) challengeFromBody(ctx context.Context, body []byte, origin str
 		return err
 	}
 	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
-	if err := solver.solveChallengePage(ctx, origin, accountAgent, string(body)); err != nil {
-		return err
+	// The page's challenge types were chosen for the request that was
+	// just made, so the account agent is tried first; when it cannot
+	// clear them, the browser agents try the same page, since the
+	// post-back is scored again for each.
+	for _, agent := range append([]string{accountAgent}, solveAgents...) {
+		if err = solver.solveChallengePage(ctx, origin, agent, string(body)); err == nil {
+			return b.installChallengeCookies(jar)
+		}
 	}
-	return b.installChallengeCookies(jar)
+	return err
 }
 
 // installChallengeCookies moves every cookie a solve issued into the
@@ -489,7 +504,7 @@ func isChallengePage(page []byte) bool {
 }
 
 func (b *Backend) solveChallenge(ctx context.Context) error {
-	agents := []string{accountAgent, apiAgent, firefoxAndroidAgent}
+	agents := []string{accountAgent, firefoxAndroidAgent, desktopAgent}
 	var lastErr error
 	for _, base := range challengeHosts {
 		// Probe with the account agent only: a host that is not
