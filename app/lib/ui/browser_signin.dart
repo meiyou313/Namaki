@@ -129,7 +129,13 @@ class FxaWebChannel {
 (function () {
   if (window.__armanHooked) return;
   window.__armanHooked = true;
-  var send = function (o) { try { $post } catch (e) {} };
+  var send = function (o) {
+    try {
+      var host = window.location.hostname;
+      if (host !== 'accounts.firefox.com' && !host.endsWith('.firefox.com')) return;
+      $post
+    } catch (e) {}
+  };
   var onChannel = function (e) {
     var d = e.detail;
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } }
@@ -179,6 +185,17 @@ class FxaWebChannel {
         _reply(id, messageId, command as String, {'ok': true});
       case 'fxaccounts:login' || 'fxaccounts:oauth_login':
         _login(message['data']);
+        // The page waits for this answer before it goes on (to the
+        // verification code, or to its done page), so answer it the way
+        // a browser does.
+        if (messageId is String && messageId.isNotEmpty) {
+          _reply(id, messageId, command as String, {'ok': true});
+        }
+      default:
+        // Any other command the page sends also gets its answer.
+        if (messageId is String && messageId.isNotEmpty) {
+          _reply(id, messageId, command as String, {'ok': true});
+        }
     }
   }
 

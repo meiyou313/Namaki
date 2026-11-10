@@ -78,6 +78,10 @@ class _SignInDialogState extends State<_SignInDialog> {
   /// and the core's text.
   String _formProblem = '';
   String _formProblemText = '';
+
+  /// The person chose the form after the browser sign-in failed: "try
+  /// again" retries the form, instead of opening the browser again.
+  bool _triedForm = false;
   bool _sending = false;
   bool _showPassword = false;
   Timer? _poll;
@@ -251,12 +255,26 @@ class _SignInDialogState extends State<_SignInDialog> {
 
   void _restart() {
     final browserRetry = widget.onBrowserRetry;
-    if (browserRetry != null) {
+    if (browserRetry != null && !_triedForm) {
       Navigator.of(context).pop();
       browserRetry();
       return;
     }
     setState(() {
+      _poll?.cancel();
+      _state = null;
+      _checking = null;
+      _error = null;
+      _formProblem = '';
+      _answer.clear();
+    });
+  }
+
+  /// The browser sign-in failed: show the form instead, so the other
+  /// method can be tried without leaving the dialog.
+  void _tryForm() {
+    setState(() {
+      _triedForm = true;
       _poll?.cancel();
       _state = null;
       _checking = null;
@@ -313,8 +331,16 @@ class _SignInDialogState extends State<_SignInDialog> {
               icon: const Icon(Icons.open_in_new_rounded, size: 18),
               label: Text(l.setPasswordButton),
             )
-          else if (failed)
-            FilledButton(onPressed: _restart, child: Text(l.tryAgain))
+          else if (failed) ...[
+            // The browser sign-in failed: offer the form, so the
+            // other method can be tried without leaving the dialog.
+            if (widget.onBrowserRetry != null)
+              TextButton(
+                onPressed: _tryForm,
+                child: Text(l.signInMethodApi),
+              ),
+            FilledButton(onPressed: _restart, child: Text(l.tryAgain)),
+          ]
           else if (s == null)
             FilledButton(
               onPressed: _sending || _checking != null ? null : _start,
