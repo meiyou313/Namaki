@@ -385,6 +385,7 @@ func solvePow(base, hash string) (string, error) {
 	}
 	return "", errors.New("Unable to complete service verification")
 }
+
 // The Firefox Accounts hosts the challenge solver tries, and the user
 // agents it tries on each: the bot protection judges a request by both,
 // so a challenge cleared under one agent may not clear under another
@@ -460,7 +461,20 @@ func (b *Backend) solveChallenge(ctx context.Context) error {
 	agents := []string{accountAgent, apiAgent, firefoxAndroidAgent}
 	var lastErr error
 	for _, base := range challengeHosts {
-		for _, agent := range agents {
+		// Probe with the account agent only: a host that is not
+		// challenging must never see the other agents, so the
+		// account's own agent stays the one used for the account.
+		served, err := b.solveChallengeOnHost(ctx, base, accountAgent)
+		if err == nil {
+			if served {
+				return nil
+			}
+			continue
+		}
+		// A challenge was served but the account agent could not
+		// solve it: try the other agents on this host.
+		lastErr = err
+		for _, agent := range agents[1:] {
 			served, err := b.solveChallengeOnHost(ctx, base, agent)
 			if err != nil {
 				lastErr = err

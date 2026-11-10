@@ -224,11 +224,11 @@ func (d *dashboard) statusJSON() object {
 		startedAt = time.UnixMilli(ms).UTC().Format(time.RFC3339)
 	}
 	proxy := object{
-		"listen":           fmt.Sprintf("%s:%d", bind, port),
-		"upstream":         upstream,
-		"country_code":     str(activeServer, "code"),
-		"country_name":     str(activeServer, "country"),
-		"city_name":        str(activeServer, "city"),
+		"listen":       fmt.Sprintf("%s:%d", bind, port),
+		"upstream":     upstream,
+		"country_code": str(activeServer, "code"),
+		"country_name": str(activeServer, "country"),
+		"city_name":    str(activeServer, "city"),
 		"selection_source": func() string {
 			if str(settings, "serverId") == "REC" {
 				return "recommended"
@@ -295,18 +295,18 @@ func (d *dashboard) statusJSON() object {
 			"code":    "",
 			"address": "",
 		},
-		"proxy":                  proxy,
-		"active_account":         active,
-		"exit":                   exitInfo,
-		"traffic":                traffic,
-		"last_test":              d.getLastTest(),
-		"notices":                []any{},
-		"accounts":               object{"total": len(list(snap, "accounts")), "ready": readyCount},
+		"proxy":                    proxy,
+		"active_account":           active,
+		"exit":                     exitInfo,
+		"traffic":                  traffic,
+		"last_test":                d.getLastTest(),
+		"notices":                  []any{},
+		"accounts":                 object{"total": len(list(snap, "accounts")), "ready": readyCount},
 		"switch_threshold_percent": 0,
-		"version":                str(snap, "version"),
-		"can_exit":               true,
-		"system_proxy":           "",
-		"system_proxy_supported": false,
+		"version":                  str(snap, "version"),
+		"can_exit":                 true,
+		"system_proxy":             "",
+		"system_proxy_supported":   false,
 		// TODO: report the real FoxVpnService TUN state here. The snapshot
 		// has no TUN field; "off"/"not_running" below is only correct
 		// while disconnected.

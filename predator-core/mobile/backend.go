@@ -102,9 +102,13 @@ func NewBackend(host Host, vault string) *Backend {
 	var saved object
 	if json.Unmarshal([]byte(vault), &saved) == nil {
 		if s := obj(saved, "settings"); len(s) > 0 {
-            if str(s, "accentColor") == "" { s["accentColor"] = "orange" }
-            if validate(s) == nil { b.settings = s }
-        }
+			if str(s, "accentColor") == "" {
+				s["accentColor"] = "orange"
+			}
+			if validate(s) == nil {
+				b.settings = s
+			}
+		}
 		b.servers = cachedServers(list(saved, "servers"))
 		b.auth = obj(saved, "auth")
 		if len(b.auth) == 0 {
@@ -208,12 +212,12 @@ func validate(s object) error {
 	default:
 		return errors.New("Choose a valid theme")
 	}
-	switch str(s,"accentColor") {
-  case "orange","gold","blue","teal","emerald","red","purple","pink","indigo","cyan":
-  default:
-    return errors.New("Choose a valid accent color")
-  }
-  if str(s, "bind") != "127.0.0.1" && str(s, "bind") != "0.0.0.0" {
+	switch str(s, "accentColor") {
+	case "orange", "gold", "blue", "teal", "emerald", "red", "purple", "pink", "indigo", "cyan":
+	default:
+		return errors.New("Choose a valid accent color")
+	}
+	if str(s, "bind") != "127.0.0.1" && str(s, "bind") != "0.0.0.0" {
 		return errors.New("Invalid bind address")
 	}
 	for _, p := range []float64{num(s, "socksPort"), num(obj(s, "upstream"), "port")} {
@@ -443,16 +447,23 @@ func (b *Backend) Call(channel, argsJSON string) string {
 		b.mu.Unlock()
 		err = b.save()
 	case "accentColor":
-        color := text(0)
-        switch color { case "orange","gold","blue","teal","emerald","red","purple","pink","indigo","cyan":
-          default: err=errors.New("Invalid accent color") }
-        if err == nil {
-          b.mu.Lock()
-          previous := b.settings["accentColor"]
-          b.settings["accentColor"] = color
-          b.mu.Unlock()
-          if err = b.save();err != nil {b.mu.Lock();b.settings["accentColor"]=previous;b.mu.Unlock()}
-        }
+		color := text(0)
+		switch color {
+		case "orange", "gold", "blue", "teal", "emerald", "red", "purple", "pink", "indigo", "cyan":
+		default:
+			err = errors.New("Invalid accent color")
+		}
+		if err == nil {
+			b.mu.Lock()
+			previous := b.settings["accentColor"]
+			b.settings["accentColor"] = color
+			b.mu.Unlock()
+			if err = b.save(); err != nil {
+				b.mu.Lock()
+				b.settings["accentColor"] = previous
+				b.mu.Unlock()
+			}
+		}
 	case "select":
 		b.mu.Lock()
 		if b.connection != "disconnected" {
@@ -830,6 +841,7 @@ func (b *Backend) stopPings() {
 		b.emit()
 	}
 }
+
 // pingMany probes the servers with the given ids (every server when ids
 // is nil) through the probe at target, three at a time, recording each
 // latency as it is measured so the app can show results as they land.

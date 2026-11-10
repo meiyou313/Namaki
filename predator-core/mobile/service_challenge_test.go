@@ -28,6 +28,7 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 	site, _ := url.Parse("https://accounts.firefox.com/")
 	b.client.Jar.SetCookies(site, []*http.Cookie{{Name: "stale", Value: "clearance", Path: "/"}})
 	var agents []string
+	solved := false
 	b.client.Transport = exitRoundTripper(func(r *http.Request) (*http.Response, error) {
 		agents = append(agents, r.UserAgent())
 		if _, err := r.Cookie("stale"); err == nil {
@@ -45,12 +46,20 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 				body = `{"ok":true}`
 			}
 		case r.URL.Path == "/":
-			body = `<title>Client Challenge</title>/_fs-ch-test`
+			// Once the post-back is accepted the server stops
+			// challenging: the re-fetch after a success must see a
+			// plain page, not the challenge again.
+			if solved {
+				body = `<title>Firefox Accounts</title>`
+			} else {
+				body = `<title>Client Challenge</title>/_fs-ch-test`
+			}
 		case strings.HasSuffix(r.URL.Path, "script.js"):
 			body = `init ([{"ty":"clientmetrics","data":{"nested":[[1,2]]}}], "token", "/_fs-ch-test", true)`
 		case strings.HasSuffix(r.URL.Path, "fst-post-back"):
 			body = `{"status":"success"}`
 			response.Header.Set("Set-Cookie", "clearance=accepted; Domain=firefox.com; Path=/; HttpOnly")
+			solved = true
 		default:
 			t.Fatal("Unexpected verification request")
 		}
