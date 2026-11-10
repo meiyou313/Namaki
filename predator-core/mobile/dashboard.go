@@ -1234,7 +1234,32 @@ func (b *Backend) StartDashboard(listen string, token string) error {
 		}
 		writeErr(w, http.StatusMethodNotAllowed, "POST only")
 	})
-	mux.HandleFunc("/api/signin/browser/proxy", unsupported("Browser sign-in was removed in Predator v2.0.0."))
+	// The browser sign-in's proxy: POST opens (and arms) it and gives its
+	// address, DELETE disarms it when the sign-in page closes. The whole
+	// dashboard is already behind the local token, so only the app on
+	// this device may ask.
+	mux.HandleFunc("/api/signin/browser/proxy", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			// Port is the port the app's browser view was started with,
+			// if any; the proxy takes it again when it can.
+			port := 0
+			if v, ok := readBody(r)["port"].(float64); ok {
+				port = int(v)
+			}
+			address, err := d.b.openSignInProxy(port)
+			if err != nil {
+				writeErr(w, http.StatusInternalServerError, "starting the sign-in proxy: "+err.Error())
+				return
+			}
+			writeJSON(w, http.StatusOK, object{"address": address})
+		case http.MethodDelete:
+			d.b.closeSignInProxy()
+			writeJSON(w, http.StatusOK, object{"closed": true})
+		default:
+			writeErr(w, http.StatusMethodNotAllowed, "POST or DELETE only")
+		}
+	})
 	mux.HandleFunc("/api/connections", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, []any{})
 	})

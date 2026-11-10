@@ -17,6 +17,8 @@ import (
 	"time"
 
 	utls "github.com/metacubex/utls"
+
+	"foxvpn/android/core/mobile/signinproxy"
 )
 
 // Host is implemented by the mobile platform. Credentials never cross the WebView bridge.
@@ -97,6 +99,12 @@ type Backend struct {
 	pingEpoch                                        uint64
 	updates                                          releaseUpdates
 	authRefresh                                      sync.Mutex
+	// signinProxy is the browser sign-in's proxy (signinproxy): started
+	// the first time the app opens the sign-in page, and kept on its
+	// port while the core runs, since a Windows browser view keeps the
+	// proxy it was started with. Guarded by signinProxyMu, not mu.
+	signinProxyMu sync.Mutex
+	signinProxy   *signinproxy.Server
 }
 
 func NewBackend(host Host, vault string) *Backend {
