@@ -27,10 +27,9 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 	b := NewBackend(&testHost{}, "{}")
 	site, _ := url.Parse("https://accounts.firefox.com/")
 	b.client.Jar.SetCookies(site, []*http.Cookie{{Name: "stale", Value: "clearance", Path: "/"}})
-	var agents []string
+	var loginAgent string
 	solved := false
 	b.client.Transport = exitRoundTripper(func(r *http.Request) (*http.Response, error) {
-		agents = append(agents, r.UserAgent())
 		if _, err := r.Cookie("stale"); err == nil {
 			t.Fatal("Stale challenge cookies reached the fresh solver")
 		}
@@ -39,6 +38,7 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 		switch {
 		case r.URL.Hostname() == "api.accounts.firefox.com":
 			if r.Method == "POST" {
+				loginAgent = r.UserAgent()
 				cookie, err := r.Cookie("clearance")
 				if err != nil || cookie.Value != "accepted" {
 					t.Fatal("verification cookie not installed on API host")
@@ -72,10 +72,11 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 	if _, _, _, err := b.fetch(context.Background(), "https://api.accounts.firefox.com/v1/account/login", "POST", []byte("{}"), nil); err != nil {
 		t.Fatal(err)
 	}
-	for _, agent := range agents {
-		if agent != accountAgent {
-			t.Fatal("Account user agent changed during verification")
-		}
+	// The solver may try the browser and desktop agents while probing
+	// (the way FoxyVPN does), but the account's own request keeps the
+	// account's agent.
+	if loginAgent != controlPlaneAgent {
+		t.Fatalf("Account user agent changed during verification: %q", loginAgent)
 	}
 }
 

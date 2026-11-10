@@ -27,7 +27,6 @@ import (
 const prefix = "identity.mozilla.com/picl/v1/"
 const clientID = "5882386c6d801776"
 const scope = "profile https://identity.mozilla.com/apps/vpn"
-const apiAgent = "MozillaVPN/2.35.0 (sys:android; iap:true)"
 
 var packageName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$`)
 var hostName = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$`)
@@ -83,12 +82,19 @@ func (b *Backend) fetch(ctx context.Context, address, method string, body []byte
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	req.Header.Set("User-Agent", apiAgent)
-	if req.URL.Hostname() == "api.accounts.firefox.com" || req.URL.Hostname() == "accounts.firefox.com" {
-		req.Header.Set("User-Agent", accountAgent)
+	// The account service's own headers, exactly as FoxyVPN sends
+	// them: the app's own agent (one agent for every host), any
+	// response accepted, and no compression. The previous defaults
+	// (a Chrome agent on the account hosts, Accept: application/json,
+	// Go's gzip) contradicted the Firefox TLS handshake and drew a
+	// CAPTCHA. Callers that need other headers pass them in [headers],
+	// which override these defaults.
+	req.Header.Set("User-Agent", controlPlaneAgent)
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Encoding", "identity")
+	if len(body) > 0 {
+		req.Header.Set("Content-Type", "application/json")
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
 	for k, v := range headers {
 		req.Header[k] = v
 	}
@@ -437,10 +443,10 @@ func (b *Backend) challengeFromBody(ctx context.Context, body []byte, origin str
 	}
 	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
 	// The page's challenge types were chosen for the request that was
-	// just made, so the account agent is tried first; when it cannot
-	// clear them, the browser agents try the same page, since the
-	// post-back is scored again for each.
-	for _, agent := range append([]string{accountAgent}, solveAgents...) {
+	// just made, so the account's own agent is tried first; when it
+	// cannot clear them, the browser agents try the same page, since
+	// the post-back is scored again for each.
+	for _, agent := range append([]string{controlPlaneAgent}, solveAgents...) {
 		if err = solver.solveChallengePage(ctx, origin, agent, string(body)); err == nil {
 			return b.installChallengeCookies(jar)
 		}
@@ -503,24 +509,17 @@ func isChallengePage(page []byte) bool {
 	return bytes.Contains(lower, []byte("client challenge")) || bytes.Contains(page, []byte("script.js")) || bytes.Contains(page, []byte("fst-post-back"))
 }
 
+// solveChallenge probes every host with every agent, the way FoxyVPN
+// does: a host may challenge only one agent, so a host that shows
+// nothing to the account's agent can still challenge the browser or
+// desktop agent. A fetch failure or a plain page just moves on to the
+// next combination; only a served-but-unsolved challenge is an error
+// worth remembering.
 func (b *Backend) solveChallenge(ctx context.Context) error {
-	agents := []string{accountAgent, firefoxAndroidAgent, desktopAgent}
+	agents := []string{controlPlaneAgent, firefoxAndroidAgent, desktopAgent}
 	var lastErr error
 	for _, base := range challengeHosts {
-		// Probe with the account agent only: a host that is not
-		// challenging must never see the other agents, so the
-		// account's own agent stays the one used for the account.
-		served, err := b.solveChallengeOnHost(ctx, base, accountAgent)
-		if err == nil {
-			if served {
-				return nil
-			}
-			continue
-		}
-		// A challenge was served but the account agent could not
-		// solve it: try the other agents on this host.
-		lastErr = err
-		for _, agent := range agents[1:] {
+		for _, agent := range agents {
 			served, err := b.solveChallengeOnHost(ctx, base, agent)
 			if err != nil {
 				lastErr = err
@@ -586,7 +585,11 @@ func (b *Backend) solveChallengePage(ctx context.Context, base, agent, page stri
 				}
 				answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
 			case "pat":
-				raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
+				patHeaders := headers.Clone()
+				patHeaders.Set("Accept", "text/plain")
+				patHeaders.Set("Content-Type", "application/json")
+				patHeaders.Set("Origin", base)
+				raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, patHeaders)
 				if e != nil {
 					return e
 				}
