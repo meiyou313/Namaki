@@ -376,8 +376,10 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
   /// for its result.
   Future<void> _gotSession(String email, String sessionToken) async {
     final api = widget.core.api;
+    // The page may not hand over the email; the core fills it from the
+    // session status, so an empty address is not a failure.
     final address = email.isNotEmpty ? email : widget.email;
-    if (api == null || address.isEmpty) {
+    if (api == null) {
       setState(() => _error = AppLocalizations.of(context).signInFailed);
       return;
     }
