@@ -31,8 +31,10 @@ class AppSettings extends ChangeNotifier {
   /// location is shown by its country either way.
   bool showPublicIp = false;
 
-  /// How a new account signs in (the accounts page's row).
-  SignInMethod signInMethod = SignInMethod.api;
+  /// How a new account signs in (the accounts page's row). The browser
+  /// page is the default: the form stays one tap away on the accounts
+  /// page, and the form is still used where the browser is unsupported.
+  SignInMethod signInMethod = SignInMethod.browser;
 
   /// The address the location delay test probes, by its short id
   /// (telegram, youtube, ...); 'telegram' is the default.
