@@ -252,6 +252,9 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
   // web view's proxy (Android, macOS): both are undone when it closes.
   bool _proxyOpen = false;
   bool _viewProxySet = false;
+  // The page failed through the proxy and was retried directly: once is
+  // enough, so a page that fails both ways does not reload forever.
+  bool _proxyRetried = false;
 
   @override
   void initState() {
@@ -374,6 +377,20 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
           onPageFinished: (_) {
             c.runJavaScript(hook);
             if (mounted) setState(() => _loading = false);
+          },
+          // The page failed through the core's proxy: drop the proxy and
+          // open the page directly, the way it did before the proxy.
+          // Only the main page's failure retries, and only once.
+          onWebResourceError: (error) {
+            if (!_viewProxySet ||
+                _proxyRetried ||
+                error.isForMainFrame != true) {
+              return;
+            }
+            _proxyRetried = true;
+            _setViewProxy(null).ignore();
+            _viewProxySet = false;
+            c.loadRequest(Uri.parse(_loginUrl(widget.email)));
           },
         ),
       )
