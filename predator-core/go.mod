@@ -3,6 +3,7 @@ module foxvpn/android/core
 go 1.24.0
 
 require (
+	github.com/metacubex/utls v1.8.0
 	github.com/sagernet/gomobile v0.1.7
 	github.com/sagernet/quic-go v0.52.0-beta.1
 	github.com/sagernet/sing-box v1.12.0
@@ -60,7 +61,6 @@ require (
 	github.com/mdlayher/sdnotify v1.0.0 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
 	github.com/metacubex/tfo-go v0.0.0-20241231083714-66613d49c422 // indirect
-	github.com/metacubex/utls v1.8.0 // indirect
 	github.com/mholt/acmez/v3 v3.1.2 // indirect
 	github.com/miekg/dns v1.1.67 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
