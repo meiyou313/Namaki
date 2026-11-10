@@ -2,7 +2,7 @@ name: merged_vpn
 description: "Namaki — Android VPN app"
 publish_to: 'none'
 
-version: 3.3.0+330
+version: 3.4.0+340
 
 environment:
   sdk: ^3.13.5
