@@ -52,6 +52,26 @@ func (b *Backend) authGet(ctx context.Context, path, session string) (object, er
 	return result, err
 }
 
+// isUnconfirmedSession reports whether an authorization failure means
+// the session is not confirmed yet (FoxyVPN's isUnconfirmedSession):
+// errno 104 or 138, or a 400/401 whose message mentions unconfirmed or
+// unverified. Those are worth retrying; anything else is final.
+func isUnconfirmedSession(err error) bool {
+	var se *serviceError
+	if errors.As(err, &se) {
+		if se.errno == 104 || se.errno == 138 {
+			return true
+		}
+		if se.status == 400 || se.status == 401 {
+			msg := strings.ToLower(se.message)
+			return strings.Contains(msg, "unconfirmed") || strings.Contains(msg, "unverified")
+		}
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unconfirmed") || strings.Contains(msg, "unverified")
+}
+
 // browserLogin exchanges a browser session token for the account's OAuth
 // tokens and stores them exactly like complete() does. On any error the
 // pending sign-in is cleared.
@@ -61,14 +81,17 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 		b.pending = nil
 		return nil, err
 	}
-	if email == "" || !validSessionToken(sessionToken) {
+	if !validSessionToken(sessionToken) {
 		return fail(errors.New("The sign-in page did not hand over a usable session token"))
 	}
 	b.pending = object{"session": sessionToken, "email": email, "method": "browser"}
 	// The page hands the token over right after sign-in, but the session
 	// may still need its email confirmation; poll until Mozilla reports
 	// it verified. A failed check (session not verified yet, or a
-	// transient error) just waits for the next attempt.
+	// transient error) just waits for the next attempt — except a
+	// rejected session (400/401): retrying a dead token is pointless.
+	// The status also names the session's email, which fills in for a
+	// caller that had none.
 	verified := false
 	for attempt := 0; attempt < 100 && !verified; attempt++ {
 		if attempt > 0 {
@@ -79,12 +102,25 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 			}
 		}
 		status, err := b.authGet(ctx, "/recovery_email/status", sessionToken)
-		if err == nil && yes(status, "verified") {
+		if err != nil {
+			var se *serviceError
+			if errors.As(err, &se) && (se.status == 400 || se.status == 401) {
+				return fail(errors.New("The browser session is no longer valid. Please sign in again in the browser page."))
+			}
+			continue
+		}
+		if email == "" {
+			email = str(status, "email")
+		}
+		if yes(status, "verified") {
 			verified = true
 		}
 	}
 	if !verified {
 		return fail(errors.New("Sign-in verification timed out. Please try again."))
+	}
+	if email != "" {
+		b.pending["email"] = email
 	}
 	// PKCE, as in FoxyVPN's exchangeSessionWithOAuthCode.
 	secret := make([]byte, 32)
@@ -99,11 +135,37 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 		return fail(err)
 	}
 	state := base64.RawURLEncoding.EncodeToString(stateBytes)
-	auth, err := b.authRequest(ctx, "/oauth/authorization", object{
-		"client_id": clientID, "response_type": "code", "scope": scope,
-		"state": state, "access_type": "offline",
-		"code_challenge": challenge, "code_challenge_method": "S256",
-	}, sessionToken)
+	// The session can report verified a moment before the authorization
+	// endpoint agrees; retry an unconfirmed session instead of failing
+	// (FoxyVPN's exchange retry), re-checking the session before each
+	// new attempt. Any other error fails at once.
+	var auth object
+	var err error
+	for attempt := 0; attempt < 10; attempt++ {
+		auth, err = b.authRequest(ctx, "/oauth/authorization", object{
+			"client_id": clientID, "response_type": "code", "scope": scope,
+			"state": state, "access_type": "offline",
+			"code_challenge": challenge, "code_challenge_method": "S256",
+		}, sessionToken)
+		if err == nil {
+			break
+		}
+		if !isUnconfirmedSession(err) || attempt == 9 {
+			return fail(err)
+		}
+		select {
+		case <-ctx.Done():
+			return fail(ctx.Err())
+		case <-time.After(3 * time.Second):
+		}
+		if _, statusErr := b.authGet(ctx, "/recovery_email/status", sessionToken); statusErr != nil {
+			var se *serviceError
+			if errors.As(statusErr, &se) && (se.status == 400 || se.status == 401) {
+				return fail(errors.New("The browser session is no longer valid. Please sign in again in the browser page."))
+			}
+			// A transient re-check failure: the next exchange attempt decides.
+		}
+	}
 	if err != nil {
 		return fail(err)
 	}

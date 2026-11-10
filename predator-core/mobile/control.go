@@ -61,12 +61,22 @@ func hawk(method, address, session, body string, ts int64, nonce string) (string
 	if port == "" {
 		port = "443"
 	}
-	hash := sha256.Sum256([]byte("hawk.1.payload\napplication/json\n" + body + "\n"))
-	encoded := base64.StdEncoding.EncodeToString(hash[:])
+	// A payload hash is only sent for requests with a body: FoxyVPN
+	// sends none for its empty GETs, and the server rejects a hash
+	// computed over a body the request does not carry.
+	encoded := ""
+	if body != "" {
+		hash := sha256.Sum256([]byte("hawk.1.payload\napplication/json\n" + body + "\n"))
+		encoded = base64.StdEncoding.EncodeToString(hash[:])
+	}
 	normalized := fmt.Sprintf("hawk.1.header\n%d\n%s\n%s\n%s\n%s\n%s\n%s\n\n", ts, nonce, method, u.RequestURI(), u.Hostname(), port, encoded)
 	mac := hmac.New(sha256.New, expanded[32:])
 	mac.Write([]byte(normalized))
-	return fmt.Sprintf(`Hawk id="%s", ts="%d", nonce="%s", mac="%s", hash="%s"`, hex.EncodeToString(expanded[:32]), ts, nonce, base64.StdEncoding.EncodeToString(mac.Sum(nil)), encoded), nil
+	header := fmt.Sprintf(`Hawk id="%s", ts="%d", nonce="%s", mac="%s"`, hex.EncodeToString(expanded[:32]), ts, nonce, base64.StdEncoding.EncodeToString(mac.Sum(nil)))
+	if encoded != "" {
+		header += fmt.Sprintf(`, hash="%s"`, encoded)
+	}
+	return header, nil
 }
 func (b *Backend) fetch(ctx context.Context, address, method string, body []byte, headers http.Header) ([]byte, http.Header, int, error) {
 	req, err := http.NewRequestWithContext(ctx, method, address, bytes.NewReader(body))
@@ -375,6 +385,14 @@ func solvePow(base, hash string) (string, error) {
 	}
 	return "", errors.New("Unable to complete service verification")
 }
+// The Firefox Accounts hosts the challenge solver tries, and the user
+// agents it tries on each: the bot protection judges a request by both,
+// so a challenge cleared under one agent may not clear under another
+// (FoxyVPN's FastlyChallengeSolver tries the same combinations).
+var challengeHosts = []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com", "https://oauth.accounts.firefox.com"}
+
+const firefoxAndroidAgent = "Mozilla/5.0 (Android 14; Mobile; rv:145.0) Gecko/145.0 Firefox/145.0"
+
 func (b *Backend) challenge(ctx context.Context) error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -385,94 +403,187 @@ func (b *Backend) challenge(ctx context.Context) error {
 	if err := solver.solveChallenge(ctx); err != nil {
 		return err
 	}
-	for _, address := range []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/"} {
+	// Every cookie the solve issued, collected once: a challenge solved
+	// on one host must clear the others too, so a copy is installed for
+	// each FxA host (and a firefox.com domain copy), the way FoxyVPN
+	// does. A plain per-host copy would leave oauth.accounts.firefox.com
+	// challenging when the solve happened on api.accounts.firefox.com.
+	hosts := []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/", "https://oauth.accounts.firefox.com/"}
+	var issued []*http.Cookie
+	seen := map[string]bool{}
+	for _, address := range hosts {
 		u, _ := url.Parse(address)
-		b.client.Jar.SetCookies(u, jar.Cookies(u))
+		for _, c := range jar.Cookies(u) {
+			key := c.Name + "\x00" + c.Value
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			issued = append(issued, c)
+		}
+	}
+	if len(issued) == 0 {
+		return errors.New("Service verification completed but issued no cookies. Try again later")
+	}
+	for _, address := range hosts {
+		u, _ := url.Parse(address)
+		for _, c := range issued {
+			clone := *c
+			clone.Domain = u.Hostname()
+			b.client.Jar.SetCookies(u, []*http.Cookie{&clone})
+		}
+	}
+	u, _ := url.Parse("https://firefox.com/")
+	for _, c := range issued {
+		clone := *c
+		clone.Domain = "firefox.com"
+		b.client.Jar.SetCookies(u, []*http.Cookie{&clone})
 	}
 	return nil
 }
+
+// isChallengePage reports whether a fetched page is a Fastly client
+// challenge page: it carries a challenge asset prefix and one of the
+// challenge markers.
+func isChallengePage(page []byte) bool {
+	if len(page) == 0 || len(page) > 2*1024*1024 {
+		return false
+	}
+	if !challengePath.Match(page) {
+		return false
+	}
+	lower := bytes.ToLower(page)
+	return bytes.Contains(lower, []byte("client challenge")) || bytes.Contains(page, []byte("script.js")) || bytes.Contains(page, []byte("fst-post-back"))
+}
+
 func (b *Backend) solveChallenge(ctx context.Context) error {
-	headers := http.Header{"User-Agent": []string{accountAgent}, "Accept": []string{"text/html"}}
-	for _, base := range []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com"} {
-		page, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
-		if err != nil {
-			return err
-		}
-		path := challengePath.FindString(string(page))
-		if path == "" || !bytes.Contains(page, []byte("Client Challenge")) {
-			continue
-		}
-		root := base + path
-		script, _, status, err := b.fetch(ctx, root+"/script.js?reload=true", "GET", nil, headers)
-		if err != nil {
-			return err
-		}
-		if status != http.StatusOK {
-			return fmt.Errorf("Service verification could not load (HTTP %d). Try again", status)
-		}
-		challenges, token, err := parseChallengeInit(string(script), path)
-		if err != nil {
-			return err
-		}
-		for round := 0; round < 3; round++ {
-			answers := []object{}
-			for _, c := range challenges {
-				switch str(c, "ty") {
-				case "pow":
-					d := obj(c, "data")
-					answer, e := solvePow(str(d, "base"), str(d, "hash"))
-					if e != nil {
-						return e
-					}
-					answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
-				case "pat":
-					raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
-					if e != nil {
-						return e
-					}
-					auth := ""
-					if status != 400 && status != 401 {
-						var d object
-						json.Unmarshal(raw, &d)
-						auth = str(d, "auth")
-					}
-					answers = append(answers, object{"ty": "pat", "auth": auth})
-				case "clientmetrics":
-					answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
-				default:
-					return errors.New("The service requires an interactive challenge. Try again later")
-				}
+	agents := []string{accountAgent, apiAgent, firefoxAndroidAgent}
+	var lastErr error
+	for _, base := range challengeHosts {
+		for _, agent := range agents {
+			served, err := b.solveChallengeOnHost(ctx, base, agent)
+			if err != nil {
+				lastErr = err
+				continue
 			}
-			encoded, _ := json.Marshal(object{"token": token, "data": answers})
-			postHeaders := headers.Clone()
-			postHeaders.Set("Origin", base)
-			postHeaders.Set("Content-Type", "application/json")
-			raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
-			if e != nil {
-				return e
-			}
-			if status != 200 {
-				return errors.New("Service verification failed")
-			}
-			var d object
-			if json.Unmarshal(raw, &d) != nil {
-				return errors.New("Invalid service verification response")
-			}
-			if str(d, "status") == "success" {
+			if served {
 				return nil
-			}
-			challenges = nil
-			for _, v := range list(d, "ch") {
-				c, _ := v.(map[string]any)
-				challenges = append(challenges, c)
-			}
-			token = str(d, "tok")
-			if token == "" || len(challenges) == 0 {
-				return errors.New("Service verification did not complete")
 			}
 		}
 	}
+	if lastErr != nil {
+		return lastErr
+	}
 	return errors.New("Could not complete service verification. Try again later")
+}
+
+// solveChallengeOnHost solves the Fastly challenge on one host with one
+// user agent. It reports whether the host served a challenge page at
+// all: false means there was nothing to solve here, and the caller tries
+// the next host. A real failure while solving is an error.
+func (b *Backend) solveChallengeOnHost(ctx context.Context, base, agent string) (bool, error) {
+	headers := http.Header{"User-Agent": []string{agent}, "Accept": []string{"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}}
+	page, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
+	if err != nil {
+		return false, nil
+	}
+	if !isChallengePage(page) {
+		return false, nil
+	}
+	if err := b.solveChallengePage(ctx, base, agent, string(page)); err != nil {
+		return true, err
+	}
+	return true, nil
+}
+
+func (b *Backend) solveChallengePage(ctx context.Context, base, agent, page string) error {
+	headers := http.Header{"User-Agent": []string{agent}, "Accept": []string{"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}}
+	path := challengePath.FindString(page)
+	if path == "" {
+		return errors.New("Service verification could not load. Try again")
+	}
+	root := base + path
+	script, _, status, err := b.fetch(ctx, root+"/script.js?reload=true", "GET", nil, headers)
+	if err != nil {
+		return err
+	}
+	if status != http.StatusOK {
+		return fmt.Errorf("Service verification could not load (HTTP %d). Try again", status)
+	}
+	challenges, token, err := parseChallengeInit(string(script), path)
+	if err != nil {
+		return err
+	}
+	for round := 0; round < 8; round++ {
+		answers := []object{}
+		for _, c := range challenges {
+			switch str(c, "ty") {
+			case "pow":
+				d := obj(c, "data")
+				answer, e := solvePow(str(d, "base"), str(d, "hash"))
+				if e != nil {
+					return e
+				}
+				answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
+			case "pat":
+				raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
+				if e != nil {
+					return e
+				}
+				auth := ""
+				if status != 400 && status != 401 {
+					var d object
+					json.Unmarshal(raw, &d)
+					auth = str(d, "auth")
+				}
+				answers = append(answers, object{"ty": "pat", "auth": auth})
+			case "clientmetrics":
+				answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
+			case "captcha":
+				return errors.New("Mozilla requires an interactive challenge (CAPTCHA). Please sign in again in the browser page.")
+			default:
+				return errors.New("The service requires an interactive challenge. Try again later")
+			}
+		}
+		encoded, _ := json.Marshal(object{"token": token, "data": answers})
+		postHeaders := headers.Clone()
+		postHeaders.Set("Origin", base)
+		postHeaders.Set("Accept", "application/json")
+		postHeaders.Set("Content-Type", "application/json")
+		raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
+		if e != nil {
+			return e
+		}
+		if status != 200 {
+			return errors.New("Service verification failed")
+		}
+		var d object
+		if json.Unmarshal(raw, &d) != nil {
+			return errors.New("Invalid service verification response")
+		}
+		if str(d, "status") == "success" {
+			// The cookies only count once the host stops challenging:
+			// re-fetch the root and confirm the challenge page is gone.
+			again, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
+			if err != nil {
+				return err
+			}
+			if isChallengePage(again) {
+				return errors.New("Service verification was not accepted. Try again later")
+			}
+			return nil
+		}
+		challenges = nil
+		for _, v := range list(d, "ch") {
+			c, _ := v.(map[string]any)
+			challenges = append(challenges, c)
+		}
+		token = str(d, "tok")
+		if token == "" || len(challenges) == 0 {
+			return errors.New("Service verification did not complete")
+		}
+	}
+	return errors.New("Service verification did not complete")
 }
 
 func displayCity(country, city string) string {

@@ -1044,7 +1044,8 @@ func (d *dashboard) handleStartBrowserSignIn(w http.ResponseWriter, r *http.Requ
 	body := readBody(r)
 	email := str(body, "email")
 	token := cleanSessionToken(str(body, "session_token"))
-	if email == "" || !validSessionToken(token) {
+	// An empty email is fine: the core fills it from the session status.
+	if !validSessionToken(token) {
 		err := errors.New("The sign-in page did not hand over a usable session token")
 		writeJSON(w, http.StatusOK, object{
 			"id": "", "email": email, "step": "failed",
