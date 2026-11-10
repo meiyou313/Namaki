@@ -78,3 +78,43 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 		}
 	}
 }
+
+func TestChallengeFromBodySolvesDirectly(t *testing.T) {
+	b := NewBackend(&testHost{}, "{}")
+	solved := false
+	b.client.Transport = exitRoundTripper(func(r *http.Request) (*http.Response, error) {
+		response := &http.Response{StatusCode: 200, Header: make(http.Header), Request: r}
+		body := "{}"
+		switch {
+		case r.URL.Path == "/":
+			if !solved {
+				t.Fatal("solver probed the host instead of solving the challenged page")
+			}
+			body = `<title>Firefox Accounts</title>`
+		case strings.HasSuffix(r.URL.Path, "script.js"):
+			body = `init ([{"ty":"clientmetrics","data":{"nested":[[1,2]]}}], "token", "/_fs-ch-test", true)`
+		case strings.HasSuffix(r.URL.Path, "fst-post-back"):
+			body = `{"status":"success"}`
+			response.Header.Set("Set-Cookie", "clearance=accepted; Domain=firefox.com; Path=/; HttpOnly")
+			solved = true
+		default:
+			t.Fatal("Unexpected verification request")
+		}
+		response.Body = io.NopCloser(strings.NewReader(body))
+		return response, nil
+	})
+	page := `<title>Client Challenge</title>/_fs-ch-test`
+	if err := b.challengeFromBody(context.Background(), []byte(page), "https://api.accounts.firefox.com"); err != nil {
+		t.Fatal(err)
+	}
+	site, _ := url.Parse("https://api.accounts.firefox.com/")
+	found := false
+	for _, c := range b.client.Jar.Cookies(site) {
+		if c.Name == "clearance" && c.Value == "accepted" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("verification cookie not installed on API host")
+	}
+}

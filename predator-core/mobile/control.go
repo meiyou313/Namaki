@@ -118,7 +118,11 @@ func (b *Backend) jsonRequest(ctx context.Context, address, method string, body 
 			return nil, nil, err
 		}
 		if status == 406 && attempt < 3 {
-			if err = b.challenge(ctx); err != nil {
+			origin := address
+			if u, err := url.Parse(address); err == nil {
+				origin = u.Scheme + "://" + u.Host
+			}
+			if err = b.challengeFromBody(ctx, raw, origin); err != nil {
 				return nil, nil, err
 			}
 			continue
@@ -404,11 +408,38 @@ func (b *Backend) challenge(ctx context.Context) error {
 	if err := solver.solveChallenge(ctx); err != nil {
 		return err
 	}
-	// Every cookie the solve issued, collected once: a challenge solved
-	// on one host must clear the others too, so a copy is installed for
-	// each FxA host (and a firefox.com domain copy), the way FoxyVPN
-	// does. A plain per-host copy would leave oauth.accounts.firefox.com
-	// challenging when the solve happened on api.accounts.firefox.com.
+	return b.installChallengeCookies(jar)
+}
+
+// challengeFromBody solves the challenge that came with a 406 response,
+// the way FoxyVPN does: the challenge types in that page were chosen for
+// the request that was just made, so solving it directly is what the
+// service expects. Probing a host from scratch instead (a bare GET /
+// with a non-browser agent and no cookies) scores as a bot and draws a
+// harder challenge — a CAPTCHA — which no solver can pass. If the body
+// is not a challenge page at all, fall back to probing.
+func (b *Backend) challengeFromBody(ctx context.Context, body []byte, origin string) error {
+	if !isChallengePage(body) {
+		return b.challenge(ctx)
+	}
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return err
+	}
+	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
+	if err := solver.solveChallengePage(ctx, origin, accountAgent, string(body)); err != nil {
+		return err
+	}
+	return b.installChallengeCookies(jar)
+}
+
+// installChallengeCookies moves every cookie a solve issued into the
+// backend's jar: a challenge solved on one host must clear the others
+// too, so a copy is installed for each FxA host (and a firefox.com
+// domain copy), the way FoxyVPN does. A plain per-host copy would leave
+// oauth.accounts.firefox.com challenging when the solve happened on
+// api.accounts.firefox.com.
+func (b *Backend) installChallengeCookies(jar *cookiejar.Jar) error {
 	hosts := []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/", "https://oauth.accounts.firefox.com/"}
 	var issued []*http.Cookie
 	seen := map[string]bool{}
