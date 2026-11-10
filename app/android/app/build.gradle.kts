@@ -74,6 +74,7 @@ android {
                 storePassword = releaseKey.getProperty("storePassword")
                 keyAlias = releaseKey.getProperty("keyAlias")
                 keyPassword = releaseKey.getProperty("keyPassword")
+                storeType = releaseKey.getProperty("storeType", "jks")
             }
         }
     }
