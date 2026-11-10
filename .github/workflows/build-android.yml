@@ -133,7 +133,8 @@ jobs:
             echo "::warning::no release key: the APKs are signed with a debug key"
             exit 0
           fi
-          printf '%s' "$KEYSTORE" | base64 -d > app/android/release.p12
+          printf '%s' "$KEYSTORE" | tr -d '[:space:]' | base64 -di > app/android/release.p12
+          openssl pkcs12 -in app/android/release.p12 -noout -passin pass:"$PASSWORD" || { echo "::error::the release keystore does not open with the stored password"; exit 1; }
           printf 'storeFile=../release.p12\nstoreType=pkcs12\nstorePassword=%s\nkeyAlias=release\nkeyPassword=%s\n' "$PASSWORD" "$PASSWORD" > app/android/key.properties
       - name: Build APKs
         run: |
