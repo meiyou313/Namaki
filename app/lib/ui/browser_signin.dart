@@ -77,12 +77,12 @@ String _loginUrl(String email) => Uri.https('accounts.firefox.com', '/', {
 /// A Firefox user agent: accounts.firefox.com only speaks its WebChannel
 /// to what looks like Firefox.
 String get _userAgent => Platform.isAndroid
-    ? 'Mozilla/5.0 (Android 14; Mobile; rv:145.0) Gecko/145.0 Firefox/145.0'
+    ? 'Mozilla/5.0 (Android 14; Mobile; rv:159.0) Gecko/159.0 Firefox/159.0'
     : Platform.isMacOS
-    ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:145.0) '
-          'Gecko/20100101 Firefox/145.0'
-    : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) '
-          'Gecko/20100101 Firefox/145.0';
+    ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:159.0) '
+          'Gecko/20100101 Firefox/159.0'
+    : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) '
+          'Gecko/20100101 Firefox/159.0';
 
 /// Sends this app's web views (Android's WebView, macOS's WKWebView)
 /// through the proxy at [address], or straight out again when it is null.
