@@ -15,10 +15,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
-	utls "github.com/metacubex/utls"
-
-	"foxvpn/android/core/mobile/signinproxy"
 )
 
 // Host is implemented by the mobile platform. Credentials never cross the WebView bridge.
@@ -28,6 +24,7 @@ type Host interface {
 	Protect(fd int32) bool
 	DNSAddress() string
 	Certificates() string
+	BootstrapNodes() string
 }
 type object = map[string]any
 
@@ -66,7 +63,7 @@ func copyObject(m object) object {
 }
 func millis() int64 { return time.Now().UnixMilli() }
 func defaults() object {
-	return object{"transport": "auto", "theme": "system", "accentColor": "orange", "proxyOnly": false, "bind": "127.0.0.1", "socksPort": 1080, "doh": "automatic", "customDns": "", "edge": "", "exitCheck": true, "excludedApps": []any{}, "upstream": object{"enabled": false, "type": "socks5", "host": "", "port": 1080, "username": "", "password": ""}, "serverId": "REC"}
+	return object{"transport": "auto", "theme": "system", "accentColor": "orange", "proxyOnly": false, "bind": "127.0.0.1", "socksPort": 1080, "doh": "automatic", "customDns": "", "edge": "", "exitCheck": true, "excludedApps": []any{}, "upstream": object{"enabled": false, "type": "socks5", "host": "", "port": 1080, "username": "", "password": ""}, "serverId": "REC", "subscriptionsEnabled": false, "bootstrapSubUrl": "https://raw.githubusercontent.com/erfan-tahvilian/PredatorVPN/main/docs/bootstrap/working-nodes.txt", "bootstrapSubUrls": []any{"https://raw.githubusercontent.com/erfan-tahvilian/PredatorVPN/main/docs/bootstrap/working-nodes.txt", "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/top100.txt"}}
 }
 
 type Backend struct {
@@ -81,41 +78,25 @@ type Backend struct {
 	settings, auth, pending                          object
 	client                                           *http.Client
 	dialer                                           *net.Dialer
-	// signinClient is the account sign-in's own client: its dialer
-	// neither protects its sockets (so they travel the system's
-	// route, including a VPN the person already runs) nor overrides
-	// DNS (so names resolve the way the system does). The protected
-	// dialer bypasses every VPN, which is right for the tunnel but
-	// wrong for signing in: where the account service is blocked
-	// directly, the sign-in can only reach it through the person's
-	// VPN. The sign-in proxy dials through signinDialer too, so the
-	// browser view reaches the sign-in pages the same way.
-	signinClient              *http.Client
-	signinDialer              *net.Dialer
-	roots                     *x509.CertPool
-	servers                   []object
-	logs                      []object
-	latencies                 object
-	connection                string
-	platform                  string
-	started                   int64
-	exit, quota               object
-	lastError                 string
-	busy, pinging, systemDark bool
-	pingingIDs                []string
-	tunnel                    *proxyTunnel
-	cancel                    context.CancelFunc
-	epoch                     uint64
-	pingCancel                context.CancelFunc
-	pingEpoch                 uint64
-	updates                   releaseUpdates
-	authRefresh               sync.Mutex
-	// signinProxy is the browser sign-in's proxy (signinproxy): started
-	// the first time the app opens the sign-in page, and kept on its
-	// port while the core runs, since a Windows browser view keeps the
-	// proxy it was started with. Guarded by signinProxyMu, not mu.
-	signinProxyMu sync.Mutex
-	signinProxy   *signinproxy.Server
+	roots                                            *x509.CertPool
+	servers                                          []object
+	logs                                             []object
+	latencies                                        object
+	connection                                       string
+	platform                                         string
+	started                                          int64
+	exit, quota                                      object
+	lastError                                        string
+	busy, pinging, systemDark                        bool
+	pingingIDs                                       []string
+	tunnel                                           *proxyTunnel
+	cancel                                           context.CancelFunc
+	epoch                                            uint64
+	pingCancel                                       context.CancelFunc
+	pingEpoch                                        uint64
+	updates                                          releaseUpdates
+	authRefresh                                      sync.Mutex
+	bootstrapMu                                      sync.Mutex
 }
 
 func NewBackend(host Host, vault string) *Backend {
@@ -125,6 +106,16 @@ func NewBackend(host Host, vault string) *Backend {
 		if s := obj(saved, "settings"); len(s) > 0 {
 			if str(s, "accentColor") == "" {
 				s["accentColor"] = "orange"
+			}
+			if _, ok := s["bootstrapSubUrls"]; !ok {
+				first := str(s, "bootstrapSubUrl")
+				if first == "" || first == "https://cdn.jsdelivr.net/gh/erfan-tahvilian/PredatorVPN@main/docs/bootstrap/working-nodes.txt" {
+					first = "https://raw.githubusercontent.com/erfan-tahvilian/PredatorVPN/main/docs/bootstrap/working-nodes.txt"
+				}
+				s["bootstrapSubUrls"] = []any{first, "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/top100.txt"}
+			}
+			if _, ok := s["subscriptionsEnabled"]; !ok {
+				s["subscriptionsEnabled"] = false
 			}
 			if validate(s) == nil {
 				b.settings = s
@@ -165,52 +156,8 @@ func NewBackend(host Host, vault string) *Backend {
 	}}
 	b.dialer = &net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second, Control: control, Resolver: resolver}
 	jar, _ := cookiejar.New(nil)
-	b.client = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.dialer.DialContext, DialTLSContext: b.dialTLS, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	// The sign-in's own dialer: no socket protection and the system's
-	// DNS, so its traffic follows the system's route (and a VPN the
-	// person already runs). It shares the cookie jar with the main
-	// client, so challenge cookies earned on either path count on
-	// both.
-	b.signinDialer = &net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second}
-	b.signinClient = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.signinDialer.DialContext, DialTLSContext: b.dialTLSSignin, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	b.client = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.dialer.DialContext, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return b
-}
-
-// dialTLSSignin opens the TLS connection the way dialTLS does (a Firefox
-// ClientHello), but over the sign-in's unprotected dialer, so the
-// handshake travels the system's route instead of bypassing every VPN.
-func (b *Backend) dialTLSSignin(ctx context.Context, network, addr string) (net.Conn, error) {
-	return b.dialTLSWith(b.signinDialer, ctx, network, addr)
-}
-
-// dialTLS opens the TLS connection the way a browser does. The TCP
-// connection still goes through the protected dialer (the same DNS and
-// socket protection as every other request), but the handshake is a
-// Firefox ClientHello (uTLS) instead of Go's own: Go's handshake is a
-// strong bot signal, and the account service answered it with a CAPTCHA
-// even when the same request from a browser fingerprint did not.
-func (b *Backend) dialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
-	return b.dialTLSWith(b.dialer, ctx, network, addr)
-}
-
-// dialTLSWith is the shared handshake behind dialTLS and
-// dialTLSSignin: the TCP connection comes from the given dialer, the
-// handshake is a Firefox ClientHello (uTLS).
-func (b *Backend) dialTLSWith(dialer *net.Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
-	conn, err := dialer.DialContext(ctx, network, addr)
-	if err != nil {
-		return nil, err
-	}
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	uconn := utls.UClient(conn, &utls.Config{ServerName: host, RootCAs: b.roots, MinVersion: tls.VersionTLS12}, utls.HelloFirefox_Auto)
-	if err := uconn.HandshakeContext(ctx); err != nil {
-		conn.Close()
-		return nil, err
-	}
-	return uconn, nil
 }
 func (b *Backend) snapshotLocked() object {
 	s := copyObject(b.settings)
@@ -332,6 +279,12 @@ func validate(s object) error {
 	if str(s, "serverId") == "" || len(str(s, "serverId")) > 512 {
 		return errors.New("Invalid location")
 	}
+	if _, ok := s["subscriptionsEnabled"]; !ok {
+		s["subscriptionsEnabled"] = false
+	}
+	if _, ok := s["subscriptionsEnabled"].(bool); !ok {
+		return errors.New("Invalid subscription setting")
+	}
 	return nil
 }
 func envelope(data any, err error) string {
@@ -418,9 +371,6 @@ func (b *Backend) Call(channel, argsJSON string) string {
 	case "login":
 		v, _ := arg(0).(map[string]any)
 		result, err = b.login(ctx, str(v, "email"), str(v, "password"))
-	case "browserLogin":
-		v, _ := arg(0).(map[string]any)
-		result, err = b.browserLogin(ctx, str(v, "email"), str(v, "sessionToken"))
 	case "verify":
 		result, err = b.verify(ctx, text(0))
 	case "logout":
@@ -1148,11 +1098,19 @@ func (b *Backend) refreshProfile(ctx context.Context) (any, error) {
 	if err == nil {
 		d, _ := result.(map[string]any)
 		if yes(d, "limited_bandwidth") {
-			_, headers, e := b.pass(ctx)
-			if e == nil {
-				d["quotaRemaining"] = headers.Get("x-quota-remaining")
-				d["quotaLimit"] = headers.Get("x-quota-limit")
-				d["quotaReset"] = headers.Get("x-quota-reset")
+			// Never record a successful refresh without obtaining the remaining-data value.
+			if str(d, "quotaRemaining") == "" {
+				_, headers, passErr := b.pass(ctx)
+				if passErr != nil {
+					err = fmt.Errorf("Could not refresh data remaining: %w", passErr)
+				} else {
+					d["quotaRemaining"] = headers.Get("x-quota-remaining")
+					d["quotaLimit"] = headers.Get("x-quota-limit")
+					d["quotaReset"] = headers.Get("x-quota-reset")
+				}
+			}
+			if err == nil && str(d, "quotaRemaining") == "" {
+				err = errors.New("The service returned no remaining-data value. Please try refreshing again.")
 			}
 		}
 	}

@@ -27,18 +27,7 @@ import (
 const prefix = "identity.mozilla.com/picl/v1/"
 const clientID = "5882386c6d801776"
 const scope = "profile https://identity.mozilla.com/apps/vpn"
-
-// fxaHosts are the account service's hosts: the sign-in, the session
-// status, and the OAuth token exchange. Requests to them travel the
-// sign-in client (the system's route, so a VPN the person already runs
-// carries them); every other host keeps the protected client.
-var fxaHosts = map[string]bool{
-	"api.accounts.firefox.com":   true,
-	"accounts.firefox.com":       true,
-	"oauth.accounts.firefox.com": true,
-}
-
-func isFxAHost(host string) bool { return fxaHosts[strings.ToLower(host)] }
+const apiAgent = "MozillaVPN/2.35.0 (sys:android; iap:true)"
 
 var packageName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$`)
 var hostName = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$`)
@@ -72,51 +61,29 @@ func hawk(method, address, session, body string, ts int64, nonce string) (string
 	if port == "" {
 		port = "443"
 	}
-	// A payload hash is only sent for requests with a body: FoxyVPN
-	// sends none for its empty GETs, and the server rejects a hash
-	// computed over a body the request does not carry.
-	encoded := ""
-	if body != "" {
-		hash := sha256.Sum256([]byte("hawk.1.payload\napplication/json\n" + body + "\n"))
-		encoded = base64.StdEncoding.EncodeToString(hash[:])
-	}
+	hash := sha256.Sum256([]byte("hawk.1.payload\napplication/json\n" + body + "\n"))
+	encoded := base64.StdEncoding.EncodeToString(hash[:])
 	normalized := fmt.Sprintf("hawk.1.header\n%d\n%s\n%s\n%s\n%s\n%s\n%s\n\n", ts, nonce, method, u.RequestURI(), u.Hostname(), port, encoded)
 	mac := hmac.New(sha256.New, expanded[32:])
 	mac.Write([]byte(normalized))
-	header := fmt.Sprintf(`Hawk id="%s", ts="%d", nonce="%s", mac="%s"`, hex.EncodeToString(expanded[:32]), ts, nonce, base64.StdEncoding.EncodeToString(mac.Sum(nil)))
-	if encoded != "" {
-		header += fmt.Sprintf(`, hash="%s"`, encoded)
-	}
-	return header, nil
+	return fmt.Sprintf(`Hawk id="%s", ts="%d", nonce="%s", mac="%s", hash="%s"`, hex.EncodeToString(expanded[:32]), ts, nonce, base64.StdEncoding.EncodeToString(mac.Sum(nil)), encoded), nil
 }
 func (b *Backend) fetch(ctx context.Context, address, method string, body []byte, headers http.Header) ([]byte, http.Header, int, error) {
+	return b.fetchUsing(ctx, b.client, address, method, body, headers)
+}
+func (b *Backend) fetchUsing(ctx context.Context, client *http.Client, address, method string, body []byte, headers http.Header) ([]byte, http.Header, int, error) {
 	req, err := http.NewRequestWithContext(ctx, method, address, bytes.NewReader(body))
 	if err != nil {
 		return nil, nil, 0, err
 	}
-	// The account service's own headers, exactly as FoxyVPN sends
-	// them: the app's own agent (one agent for every host), any
-	// response accepted, and no compression. The previous defaults
-	// (a Chrome agent on the account hosts, Accept: application/json,
-	// Go's gzip) contradicted the Firefox TLS handshake and drew a
-	// CAPTCHA. Callers that need other headers pass them in [headers],
-	// which override these defaults.
-	req.Header.Set("User-Agent", controlPlaneAgent)
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Encoding", "identity")
-	if len(body) > 0 {
-		req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", apiAgent)
+	if req.URL.Hostname() == "api.accounts.firefox.com" || req.URL.Hostname() == "accounts.firefox.com" {
+		req.Header.Set("User-Agent", accountAgent)
 	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	for k, v := range headers {
 		req.Header[k] = v
-	}
-	// The account service travels the sign-in client (the system's
-	// route); everything else keeps the protected client. A Backend
-	// built without a sign-in client (the challenge solver's copies)
-	// falls back to the main client.
-	client := b.client
-	if u, err := url.Parse(address); err == nil && isFxAHost(u.Hostname()) && b.signinClient != nil {
-		client = b.signinClient
 	}
 	response, err := client.Do(req)
 	if err != nil {
@@ -143,12 +110,27 @@ func (b *Backend) jsonRequest(ctx context.Context, address, method string, body 
 		if err != nil {
 			return nil, nil, err
 		}
-		if status == 406 && attempt < 3 {
-			origin := address
-			if u, err := url.Parse(address); err == nil {
-				origin = u.Scheme + "://" + u.Host
+		if status == http.StatusUnavailableForLegalReasons && guardianRecoveryURL(address) {
+			// Arman-compatible path variation is tried once before any optional proxy.
+			if alternate, ok := doubleSlashGuardianURL(address); ok {
+				if data, respHeaders, code, retryErr := b.fetch(ctx, alternate, method, encoded, headers); retryErr == nil {
+					raw, h, status = data, respHeaders, code
+				}
 			}
-			if err = b.challengeFromBody(ctx, raw, origin); err != nil {
+			if status == http.StatusUnavailableForLegalReasons {
+				b.mu.Lock()
+				enabled := yes(b.settings, "subscriptionsEnabled")
+				b.mu.Unlock()
+				if enabled {
+					raw, h, status, err = b.retryGuardian451(ctx, address, method, encoded, headers)
+					if err != nil {
+						return nil, h, err
+					}
+				}
+			}
+		}
+		if status == 406 && attempt < 3 {
+			if err = b.challenge(ctx); err != nil {
 				return nil, nil, err
 			}
 			continue
@@ -415,270 +397,104 @@ func solvePow(base, hash string) (string, error) {
 	}
 	return "", errors.New("Unable to complete service verification")
 }
-
-// The Firefox Accounts hosts the challenge solver tries, and the user
-// agents it tries on each: the bot protection judges a request by both,
-// so a challenge cleared under one agent may not clear under another
-// (FoxyVPN's FastlyChallengeSolver tries the same combinations).
-var challengeHosts = []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com", "https://oauth.accounts.firefox.com"}
-
-const firefoxAndroidAgent = "Mozilla/5.0 (Android 14; Mobile; rv:159.0) Gecko/159.0 Firefox/159.0"
-
-// desktopAgent is a desktop Firefox, the last agent the solver tries:
-// a bare page fetch under a desktop browser's name scores as an ordinary
-// browser, where the account and mobile agents score as an app.
-const desktopAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0"
-
-// solveAgents is the order the solver tries when the account agent could
-// not clear a challenge: the browser agents, then the desktop one.
-var solveAgents = []string{firefoxAndroidAgent, desktopAgent}
-
 func (b *Backend) challenge(ctx context.Context) error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return err
 	}
 	// Reuse the physical-network transport but start with a fresh challenge jar.
-	solver := b.solverBackend(jar)
+	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
 	if err := solver.solveChallenge(ctx); err != nil {
 		return err
 	}
-	return b.installChallengeCookies(jar)
-}
-
-// solverBackend is a Backend for solving a challenge: the main client's
-// protected transport for ordinary hosts, the sign-in client's
-// transport for the account hosts, and a fresh cookie jar for both,
-// so the challenge cookies it earns are the jar's own to install.
-func (b *Backend) solverBackend(jar *cookiejar.Jar) *Backend {
-	s := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
-	if b.signinClient != nil {
-		s.signinClient = &http.Client{Transport: b.signinClient.Transport, Jar: jar, Timeout: b.signinClient.Timeout, CheckRedirect: b.signinClient.CheckRedirect}
-	}
-	return s
-}
-
-// challengeFromBody solves the challenge that came with a 406 response,
-// the way FoxyVPN does: the challenge types in that page were chosen for
-// the request that was just made, so solving it directly is what the
-// service expects. Probing a host from scratch instead (a bare GET /
-// with a non-browser agent and no cookies) scores as a bot and draws a
-// harder challenge — a CAPTCHA — which no solver can pass. If the body
-// is not a challenge page at all, fall back to probing.
-func (b *Backend) challengeFromBody(ctx context.Context, body []byte, origin string) error {
-	if !isChallengePage(body) {
-		return b.challenge(ctx)
-	}
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		return err
-	}
-	solver := b.solverBackend(jar)
-	// The page's challenge types were chosen for the request that was
-	// just made, so the account's own agent is tried first; when it
-	// cannot clear them, the browser agents try the same page, since
-	// the post-back is scored again for each.
-	for _, agent := range append([]string{controlPlaneAgent}, solveAgents...) {
-		if err = solver.solveChallengePage(ctx, origin, agent, string(body)); err == nil {
-			return b.installChallengeCookies(jar)
-		}
-	}
-	return err
-}
-
-// installChallengeCookies moves every cookie a solve issued into the
-// backend's jar: a challenge solved on one host must clear the others
-// too, so a copy is installed for each FxA host (and a firefox.com
-// domain copy), the way FoxyVPN does. A plain per-host copy would leave
-// oauth.accounts.firefox.com challenging when the solve happened on
-// api.accounts.firefox.com.
-func (b *Backend) installChallengeCookies(jar *cookiejar.Jar) error {
-	hosts := []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/", "https://oauth.accounts.firefox.com/"}
-	var issued []*http.Cookie
-	seen := map[string]bool{}
-	for _, address := range hosts {
+	for _, address := range []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/"} {
 		u, _ := url.Parse(address)
-		for _, c := range jar.Cookies(u) {
-			key := c.Name + "\x00" + c.Value
-			if seen[key] {
-				continue
-			}
-			seen[key] = true
-			issued = append(issued, c)
-		}
-	}
-	if len(issued) == 0 {
-		return errors.New("Service verification completed but issued no cookies. Try again later")
-	}
-	for _, address := range hosts {
-		u, _ := url.Parse(address)
-		for _, c := range issued {
-			clone := *c
-			clone.Domain = u.Hostname()
-			b.client.Jar.SetCookies(u, []*http.Cookie{&clone})
-		}
-	}
-	u, _ := url.Parse("https://firefox.com/")
-	for _, c := range issued {
-		clone := *c
-		clone.Domain = "firefox.com"
-		b.client.Jar.SetCookies(u, []*http.Cookie{&clone})
+		b.client.Jar.SetCookies(u, jar.Cookies(u))
 	}
 	return nil
 }
-
-// isChallengePage reports whether a fetched page is a Fastly client
-// challenge page: it carries a challenge asset prefix and one of the
-// challenge markers.
-func isChallengePage(page []byte) bool {
-	if len(page) == 0 || len(page) > 2*1024*1024 {
-		return false
-	}
-	if !challengePath.Match(page) {
-		return false
-	}
-	lower := bytes.ToLower(page)
-	return bytes.Contains(lower, []byte("client challenge")) || bytes.Contains(page, []byte("script.js")) || bytes.Contains(page, []byte("fst-post-back"))
-}
-
-// solveChallenge probes every host with every agent, the way FoxyVPN
-// does: a host may challenge only one agent, so a host that shows
-// nothing to the account's agent can still challenge the browser or
-// desktop agent. A fetch failure or a plain page just moves on to the
-// next combination; only a served-but-unsolved challenge is an error
-// worth remembering.
 func (b *Backend) solveChallenge(ctx context.Context) error {
-	agents := []string{controlPlaneAgent, firefoxAndroidAgent, desktopAgent}
-	var lastErr error
-	for _, base := range challengeHosts {
-		for _, agent := range agents {
-			served, err := b.solveChallengeOnHost(ctx, base, agent)
-			if err != nil {
-				lastErr = err
-				continue
+	headers := http.Header{"User-Agent": []string{accountAgent}, "Accept": []string{"text/html"}}
+	for _, base := range []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com"} {
+		page, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
+		if err != nil {
+			return err
+		}
+		path := challengePath.FindString(string(page))
+		if path == "" || !bytes.Contains(page, []byte("Client Challenge")) {
+			continue
+		}
+		root := base + path
+		script, _, status, err := b.fetch(ctx, root+"/script.js?reload=true", "GET", nil, headers)
+		if err != nil {
+			return err
+		}
+		if status != http.StatusOK {
+			return fmt.Errorf("Service verification could not load (HTTP %d). Try again", status)
+		}
+		challenges, token, err := parseChallengeInit(string(script), path)
+		if err != nil {
+			return err
+		}
+		for round := 0; round < 3; round++ {
+			answers := []object{}
+			for _, c := range challenges {
+				switch str(c, "ty") {
+				case "pow":
+					d := obj(c, "data")
+					answer, e := solvePow(str(d, "base"), str(d, "hash"))
+					if e != nil {
+						return e
+					}
+					answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
+				case "pat":
+					raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
+					if e != nil {
+						return e
+					}
+					auth := ""
+					if status != 400 && status != 401 {
+						var d object
+						json.Unmarshal(raw, &d)
+						auth = str(d, "auth")
+					}
+					answers = append(answers, object{"ty": "pat", "auth": auth})
+				case "clientmetrics":
+					answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
+				default:
+					return errors.New("The service requires an interactive challenge. Try again later")
+				}
 			}
-			if served {
+			encoded, _ := json.Marshal(object{"token": token, "data": answers})
+			postHeaders := headers.Clone()
+			postHeaders.Set("Origin", base)
+			postHeaders.Set("Content-Type", "application/json")
+			raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
+			if e != nil {
+				return e
+			}
+			if status != 200 {
+				return errors.New("Service verification failed")
+			}
+			var d object
+			if json.Unmarshal(raw, &d) != nil {
+				return errors.New("Invalid service verification response")
+			}
+			if str(d, "status") == "success" {
 				return nil
 			}
+			challenges = nil
+			for _, v := range list(d, "ch") {
+				c, _ := v.(map[string]any)
+				challenges = append(challenges, c)
+			}
+			token = str(d, "tok")
+			if token == "" || len(challenges) == 0 {
+				return errors.New("Service verification did not complete")
+			}
 		}
-	}
-	if lastErr != nil {
-		return lastErr
 	}
 	return errors.New("Could not complete service verification. Try again later")
-}
-
-// solveChallengeOnHost solves the Fastly challenge on one host with one
-// user agent. It reports whether the host served a challenge page at
-// all: false means there was nothing to solve here, and the caller tries
-// the next host. A real failure while solving is an error.
-func (b *Backend) solveChallengeOnHost(ctx context.Context, base, agent string) (bool, error) {
-	headers := http.Header{"User-Agent": []string{agent}, "Accept": []string{"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}}
-	page, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
-	if err != nil {
-		return false, nil
-	}
-	if !isChallengePage(page) {
-		return false, nil
-	}
-	if err := b.solveChallengePage(ctx, base, agent, string(page)); err != nil {
-		return true, err
-	}
-	return true, nil
-}
-
-func (b *Backend) solveChallengePage(ctx context.Context, base, agent, page string) error {
-	headers := http.Header{"User-Agent": []string{agent}, "Accept": []string{"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}}
-	path := challengePath.FindString(page)
-	if path == "" {
-		return errors.New("Service verification could not load. Try again")
-	}
-	root := base + path
-	script, _, status, err := b.fetch(ctx, root+"/script.js?reload=true", "GET", nil, headers)
-	if err != nil {
-		return err
-	}
-	if status != http.StatusOK {
-		return fmt.Errorf("Service verification could not load (HTTP %d). Try again", status)
-	}
-	challenges, token, err := parseChallengeInit(string(script), path)
-	if err != nil {
-		return err
-	}
-	for round := 0; round < 8; round++ {
-		answers := []object{}
-		for _, c := range challenges {
-			switch str(c, "ty") {
-			case "pow":
-				d := obj(c, "data")
-				answer, e := solvePow(str(d, "base"), str(d, "hash"))
-				if e != nil {
-					return e
-				}
-				answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
-			case "pat":
-				patHeaders := headers.Clone()
-				patHeaders.Set("Accept", "text/plain")
-				patHeaders.Set("Content-Type", "application/json")
-				patHeaders.Set("Origin", base)
-				raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, patHeaders)
-				if e != nil {
-					return e
-				}
-				auth := ""
-				if status != 400 && status != 401 {
-					var d object
-					json.Unmarshal(raw, &d)
-					auth = str(d, "auth")
-				}
-				answers = append(answers, object{"ty": "pat", "auth": auth})
-			case "clientmetrics":
-				answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
-			case "captcha":
-				return errors.New("Mozilla requires an interactive challenge (CAPTCHA). Please sign in again in the browser page.")
-			default:
-				return errors.New("The service requires an interactive challenge. Try again later")
-			}
-		}
-		encoded, _ := json.Marshal(object{"token": token, "data": answers})
-		postHeaders := headers.Clone()
-		postHeaders.Set("Origin", base)
-		postHeaders.Set("Accept", "application/json")
-		postHeaders.Set("Content-Type", "application/json")
-		raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
-		if e != nil {
-			return e
-		}
-		if status != 200 {
-			return errors.New("Service verification failed")
-		}
-		var d object
-		if json.Unmarshal(raw, &d) != nil {
-			return errors.New("Invalid service verification response")
-		}
-		if str(d, "status") == "success" {
-			// The cookies only count once the host stops challenging:
-			// re-fetch the root and confirm the challenge page is gone.
-			again, _, _, err := b.fetch(ctx, base+"/", "GET", nil, headers)
-			if err != nil {
-				return err
-			}
-			if isChallengePage(again) {
-				return errors.New("Service verification was not accepted. Try again later")
-			}
-			return nil
-		}
-		challenges = nil
-		for _, v := range list(d, "ch") {
-			c, _ := v.(map[string]any)
-			challenges = append(challenges, c)
-		}
-		token = str(d, "tok")
-		if token == "" || len(challenges) == 0 {
-			return errors.New("Service verification did not complete")
-		}
-	}
-	return errors.New("Service verification did not complete")
 }
 
 func displayCity(country, city string) string {

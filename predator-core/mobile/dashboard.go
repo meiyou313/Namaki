@@ -1036,55 +1036,6 @@ func (d *dashboard) handleStartSignIn(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleStartBrowserSignIn starts a browser sign-in: the WebView already
-// signed the person in and handed over the session token, so the core
-// follows it in the background (poll verified -> PKCE exchange) while
-// the page polls GET /api/signin/{id} for the outcome.
-func (d *dashboard) handleStartBrowserSignIn(w http.ResponseWriter, r *http.Request) {
-	body := readBody(r)
-	email := str(body, "email")
-	token := cleanSessionToken(str(body, "session_token"))
-	// An empty email is fine: the core fills it from the session status.
-	if !validSessionToken(token) {
-		err := errors.New("The sign-in page did not hand over a usable session token")
-		writeJSON(w, http.StatusOK, object{
-			"id": "", "email": email, "step": "failed",
-			"error": err.Error(), "error_code": signInErrorCode(err),
-		})
-		return
-	}
-	d.mu.Lock()
-	d.next++
-	id := fmt.Sprintf("predator-%d", d.next)
-	if d.signins == nil {
-		d.signins = map[string]object{}
-	}
-	d.signins[id] = object{"email": email, "method": "browser", "step": "working"}
-	d.mu.Unlock()
-	go func() {
-		_, err := d.call("browserLogin", object{"email": email, "sessionToken": token})
-		// Only report into an entry that still exists: a DELETE in the
-		// meantime means the page went away and nothing should revive it.
-		// The entry itself is replaced, never mutated, so a concurrent
-		// state read keeps seeing a complete object.
-		d.mu.Lock()
-		defer d.mu.Unlock()
-		if _, ok := d.signins[id]; !ok {
-			return
-		}
-		if err != nil {
-			d.signins[id] = object{"email": email, "method": "browser", "step": "failed",
-				"error": err.Error(), "error_code": signInErrorCode(err)}
-			return
-		}
-		d.signins[id] = object{"email": email, "method": "browser", "step": "done"}
-	}()
-	writeJSON(w, http.StatusOK, object{
-		"id": id, "email": email, "step": "working",
-		"password_accepted": true,
-	})
-}
-
 func signInErrorCode(err error) string {
 	msg := strings.ToLower(err.Error())
 	switch {
@@ -1227,39 +1178,6 @@ func (b *Backend) StartDashboard(listen string, token string) error {
 			writeErr(w, http.StatusNotImplemented, msg)
 		}
 	}
-	mux.HandleFunc("/api/signin/browser", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			d.handleStartBrowserSignIn(w, r)
-			return
-		}
-		writeErr(w, http.StatusMethodNotAllowed, "POST only")
-	})
-	// The browser sign-in's proxy: POST opens (and arms) it and gives its
-	// address, DELETE disarms it when the sign-in page closes. The whole
-	// dashboard is already behind the local token, so only the app on
-	// this device may ask.
-	mux.HandleFunc("/api/signin/browser/proxy", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			// Port is the port the app's browser view was started with,
-			// if any; the proxy takes it again when it can.
-			port := 0
-			if v, ok := readBody(r)["port"].(float64); ok {
-				port = int(v)
-			}
-			address, err := d.b.openSignInProxy(port)
-			if err != nil {
-				writeErr(w, http.StatusInternalServerError, "starting the sign-in proxy: "+err.Error())
-				return
-			}
-			writeJSON(w, http.StatusOK, object{"address": address})
-		case http.MethodDelete:
-			d.b.closeSignInProxy()
-			writeJSON(w, http.StatusOK, object{"closed": true})
-		default:
-			writeErr(w, http.StatusMethodNotAllowed, "POST or DELETE only")
-		}
-	})
 	mux.HandleFunc("/api/connections", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, []any{})
 	})

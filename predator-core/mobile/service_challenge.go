@@ -8,12 +8,7 @@ import (
 	"strings"
 )
 
-// controlPlaneAgent is the user agent of the account service's own
-// requests, exactly as FoxyVPN sends it: the app's own name, not a
-// browser's. The previous value claimed to be Chrome 126 while the TLS
-// handshake was Firefox's (and before that Go's), a contradiction the
-// bot protection reads as a bot.
-const controlPlaneAgent = "MozillaVPN/2.24.0 (sys:android)"
+const accountAgent = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36"
 
 var challengeCall = regexp.MustCompile(`\binit\s*\(\s*\[`)
 
