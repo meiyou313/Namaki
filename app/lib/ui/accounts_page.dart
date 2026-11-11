@@ -7,7 +7,6 @@ import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
 import 'backup.dart';
-import 'browser_signin.dart';
 import 'format.dart';
 import 'signin_dialog.dart';
 import 'widgets.dart';
@@ -58,7 +57,6 @@ class AccountsPage extends StatelessWidget {
               ),
             ],
           const SizedBox(height: 12),
-          _SignInMethodRow(settings: settings),
           // Nothing to switch to with one account.
           if (list.length > 1) ...[
             const SizedBox(height: 12),
@@ -95,77 +93,6 @@ class AccountsPage extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Chooses which sign-in flow Add account opens.
-class _SignInMethodRow extends StatelessWidget {
-  const _SignInMethodRow({required this.settings});
-
-  final AppSettings settings;
-
-  static String _label(AppLocalizations l, SignInMethod method) =>
-      switch (method) {
-        SignInMethod.browser => l.signInMethodBrowser,
-        SignInMethod.api => l.signInMethodApi,
-      };
-
-  Future<void> _change(BuildContext context) async {
-    final l = AppLocalizations.of(context);
-    final picked = await showDialog<SignInMethod>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l.signInMethod),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-        content: SizedBox(
-          width: 360,
-          child: RadioGroup<SignInMethod>(
-            groupValue: settings.signInMethod,
-            onChanged: (v) => Navigator.pop(context, v),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Both flows are offered; on a platform without an
-                // in-app browser (Linux) the browser choice falls back
-                // to the form.
-                for (final method in SignInMethod.values)
-                  RadioListTile<SignInMethod>(
-                    value: method,
-                    title: Text(_label(l, method)),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l.cancel),
-          ),
-        ],
-      ),
-    );
-    if (picked != null) settings.update(signInMethod: picked);
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: settings,
-    builder: (context, _) => Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        leading: const Icon(Icons.login_rounded),
-        title: Text(AppLocalizations.of(context).signInMethod),
-        // The value goes under the title: too long beside it on a phone.
-        subtitle: Text(
-          _label(AppLocalizations.of(context), settings.signInMethod),
-        ),
-        // Mirrors itself in right-to-left languages.
-        trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () => _change(context),
-      ),
-    ),
-  );
 }
 
 /// How much of an account's data is used before the next one takes over
@@ -594,7 +521,6 @@ class _AccountCard extends StatelessWidget {
           context,
           core,
           started: started,
-          settings: settings,
         );
       }
     } on CoreApiException catch (e) {

@@ -8,7 +8,7 @@ import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
 import 'format.dart';
-import 'browser_signin.dart';
+import 'signin_dialog.dart';
 import 'widgets.dart';
 
 /// The server list, one choice in one list: Recommended and Fastest, which

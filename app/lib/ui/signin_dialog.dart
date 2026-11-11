@@ -11,22 +11,16 @@ import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
-import 'browser_signin.dart';
 import 'format.dart';
 import 'widgets.dart';
 
 /// Adds an account, or signs one in again: the core runs the sign-in and
 /// the dialog shows whatever Mozilla asks for (codes, CAPTCHA, a link).
-/// [settings] lets the dialog open the browser sign-in by itself when a
-/// form sign-in fails with something the form cannot fix; without it the
-/// dialog only shows the failure.
 Future<void> showSignInDialog(
   BuildContext context,
   CoreController core, {
   String email = '',
   SignInState? started,
-  VoidCallback? onBrowserRetry,
-  AppSettings? settings,
 }) => showDialog<void>(
   context: context,
   barrierDismissible: false,
@@ -34,25 +28,28 @@ Future<void> showSignInDialog(
     core: core,
     email: email,
     started: started,
-    onBrowserRetry: onBrowserRetry,
-    settings: settings,
   ),
 );
+
+/// Opens the add-account dialog for an email (the sign-in is the direct
+/// form only). [settings] is accepted for the call sites and ignored.
+Future<void> startAddAccount(
+  BuildContext context,
+  CoreController core,
+  AppSettings? settings, {
+  String email = '',
+}) => showSignInDialog(context, core, email: email);
 
 class _SignInDialog extends StatefulWidget {
   const _SignInDialog({
     required this.core,
     required this.email,
     this.started,
-    this.onBrowserRetry,
-    this.settings,
   });
 
   final CoreController core;
   final String email;
   final SignInState? started;
-  final VoidCallback? onBrowserRetry;
-  final AppSettings? settings;
 
   @override
   State<_SignInDialog> createState() => _SignInDialogState();
@@ -79,9 +76,6 @@ class _SignInDialogState extends State<_SignInDialog> {
   String _formProblem = '';
   String _formProblemText = '';
 
-  /// The person chose the form after the browser sign-in failed: "try
-  /// again" retries the form, instead of opening the browser again.
-  bool _triedForm = false;
   bool _sending = false;
   bool _showPassword = false;
   Timer? _poll;
@@ -116,8 +110,7 @@ class _SignInDialogState extends State<_SignInDialog> {
     _poll?.cancel();
     final fromForm = _checking != null;
     _checking = null;
-    if (widget.onBrowserRetry == null &&
-        s.step == SignInStep.failed &&
+    if (s.step == SignInStep.failed &&
         _formProblems.contains(s.errorCode)) {
       _state = null;
       _formProblem = s.errorCode;
@@ -128,33 +121,6 @@ class _SignInDialogState extends State<_SignInDialog> {
       field.selection = TextSelection.collapsed(offset: field.text.length);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) focus.requestFocus();
-      });
-      return;
-    }
-    if (widget.onBrowserRetry == null &&
-        widget.settings != null &&
-        s.step == SignInStep.failed &&
-        !_formProblems.contains(s.errorCode) &&
-        browserSignInSupported) {
-      // The form sign-in failed with something the person cannot fix in
-      // the form: open the browser sign-in for the same email instead,
-      // automatically. The dialog closes first; the browser page opens
-      // over the page below it. This never runs for a dialog the browser
-      // page opened (onBrowserRetry), so it cannot loop back to itself.
-      final navigator = Navigator.of(context, rootNavigator: true);
-      final settings = widget.settings!;
-      final core = widget.core;
-      final email = s.email.isNotEmpty ? s.email : _email.text.trim();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!navigator.mounted) return;
-        navigator.pop();
-        startAddAccount(
-          navigator.context,
-          core,
-          settings,
-          email: email,
-          forceBrowser: true,
-        );
       });
       return;
     }
@@ -254,27 +220,7 @@ class _SignInDialogState extends State<_SignInDialog> {
   }
 
   void _restart() {
-    final browserRetry = widget.onBrowserRetry;
-    if (browserRetry != null && !_triedForm) {
-      Navigator.of(context).pop();
-      browserRetry();
-      return;
-    }
     setState(() {
-      _poll?.cancel();
-      _state = null;
-      _checking = null;
-      _error = null;
-      _formProblem = '';
-      _answer.clear();
-    });
-  }
-
-  /// The browser sign-in failed: show the form instead, so the other
-  /// method can be tried without leaving the dialog.
-  void _tryForm() {
-    setState(() {
-      _triedForm = true;
       _poll?.cancel();
       _state = null;
       _checking = null;
@@ -332,13 +278,6 @@ class _SignInDialogState extends State<_SignInDialog> {
               label: Text(l.setPasswordButton),
             )
           else if (failed) ...[
-            // The browser sign-in failed: offer the form, so the
-            // other method can be tried without leaving the dialog.
-            if (widget.onBrowserRetry != null)
-              TextButton(
-                onPressed: _tryForm,
-                child: Text(l.signInMethodApi),
-              ),
             FilledButton(onPressed: _restart, child: Text(l.tryAgain)),
           ]
           else if (s == null)
@@ -375,6 +314,13 @@ class _SignInDialogState extends State<_SignInDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(l.signInIntro, style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 12),
+            // Always in Persian, whatever the app's language: signing in
+            // needs a helper VPN for the moment.
+            const Text(
+              'هنگام ورود به اکانت باید از یک فیلترشکن کمکی بصورت موقت استفاده کنید.',
+              textDirection: TextDirection.rtl,
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _email,
@@ -476,9 +422,6 @@ class _SignInDialogState extends State<_SignInDialog> {
         SignInError.tooManyCodes => l.signInTooManyCodes,
         SignInError.timedOut => l.signInTimedOut,
         SignInError.network => l.signInNetwork,
-        SignInError.tokenBlocked => l.browserSignInBlocked,
-        SignInError.blocked when widget.onBrowserRetry != null =>
-          l.browserSignInBlocked,
         _ => text,
       };
 

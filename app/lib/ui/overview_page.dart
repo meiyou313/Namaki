@@ -14,7 +14,7 @@ import '../core/models.dart';
 import '../core/ports.dart';
 import '../l10n/app_localizations.dart';
 import '../platform.dart';
-import 'browser_signin.dart';
+import 'signin_dialog.dart';
 import 'connection_mode.dart';
 import 'format.dart';
 import 'port_dialog.dart';
