@@ -3,6 +3,7 @@ package mobile
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -67,5 +68,52 @@ func TestAccountChallengeKeepsUserAgentAndFreshCookies(t *testing.T) {
 		if agent != accountAgent {
 			t.Fatal("Account user agent changed during verification")
 		}
+	}
+}
+
+func TestChallengeCaptchaPausesForUserAnswer(t *testing.T) {
+	b := NewBackend(&testHost{}, "{}")
+	image := "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD"
+	b.client.Transport = exitRoundTripper(func(r *http.Request) (*http.Response, error) {
+		response := &http.Response{StatusCode: 200, Header: make(http.Header), Request: r}
+		body := "{}"
+		switch {
+		case r.URL.Path == "/":
+			body = `<title>Client Challenge</title>/_fs-ch-test`
+		case strings.HasSuffix(r.URL.Path, "script.js"):
+			body = `init ([{"ty":"captcha","data":{"image_b64":"` + image + `"}}], "token", "/_fs-ch-test", true)`
+		case strings.HasSuffix(r.URL.Path, "fst-post-back"):
+			raw, _ := io.ReadAll(r.Body)
+			if !strings.Contains(string(raw), `"ty":"captcha"`) || !strings.Contains(string(raw), `"answer":"abc123"`) {
+				t.Fatalf("CAPTCHA answer not posted: %s", raw)
+			}
+			body = `{"status":"success"}`
+			response.Header.Set("Set-Cookie", "clearance=accepted; Domain=firefox.com; Path=/; HttpOnly")
+		default:
+			t.Fatal("Unexpected verification request")
+		}
+		response.Body = io.NopCloser(strings.NewReader(body))
+		return response, nil
+	})
+	err := b.challenge(context.Background())
+	var captcha *needCaptchaError
+	if !errors.As(err, &captcha) {
+		t.Fatalf("challenge did not pause for a CAPTCHA: %v", err)
+	}
+	if captcha.image != image {
+		t.Fatalf("wrong CAPTCHA image: %q", captcha.image)
+	}
+	if b.pendingChallenge == nil || b.pendingChallenge.image != image {
+		t.Fatal("pending CAPTCHA not stored")
+	}
+	solved, err := b.solveCaptcha(context.Background(), "abc123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !yes(solved, "solved") {
+		t.Fatalf("CAPTCHA not reported solved: %v", solved)
+	}
+	if b.pendingChallenge != nil {
+		t.Fatal("pending CAPTCHA not cleared")
 	}
 }
