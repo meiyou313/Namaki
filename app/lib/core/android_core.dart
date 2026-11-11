@@ -173,16 +173,6 @@ class AndroidCore {
     }
   }
 
-  /// Sends this app's WebViews through the proxy at [address]
-  /// ("127.0.0.1:port"), or straight out again when it is null. Reports
-  /// false when this phone's WebView cannot take a proxy; the views then
-  /// connect by themselves.
-  static Future<bool> setWebViewProxy(String? address) async =>
-      await _channel.invokeMethod<bool>('setWebViewProxy', {
-        'address': address,
-      }) ??
-      false;
-
   /// Saves [bytes] as a file where the user picks, with the system's
   /// dialog; the file's name, or null when the user backed out.
   static Future<String?> saveFile(
