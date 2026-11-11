@@ -13,6 +13,7 @@ import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../desktop/desktop_bridge.dart';
 import '../l10n/app_localizations.dart';
+import 'format.dart';
 import 'signin_dialog.dart';
 import 'widgets.dart';
 
@@ -255,6 +256,12 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
   // The page failed through the proxy and was retried directly: once is
   // enough, so a page that fails both ways does not reload forever.
   bool _proxyRetried = false;
+  // The page handed over a session: shown as a banner, so the person
+  // can see the app received the sign-in while the core completes it.
+  // Without it, a page that never hands the session over looks exactly
+  // like one whose core is still working.
+  bool _sessionReceived = false;
+  String _sessionEmail = '';
 
   @override
   void initState() {
@@ -413,6 +420,12 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
     // The page may not hand over the email; the core fills it from the
     // session status, so an empty address is not a failure.
     final address = email.isNotEmpty ? email : widget.email;
+    if (mounted) {
+      setState(() {
+        _sessionReceived = true;
+        _sessionEmail = address;
+      });
+    }
     if (api == null) {
       setState(() => _error = AppLocalizations.of(context).signInFailed);
       return;
@@ -492,6 +505,7 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final view = _windows != null
         ? ww.Webview(_windows!)
         : _view != null
@@ -513,6 +527,60 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
                     left: 0,
                     right: 0,
                     child: LinearProgressIndicator(),
+                  ),
+                // The page handed the session over: the app received
+                // the sign-in and the core is completing it. The
+                // banner is the sign the handover happened.
+                if (_sessionReceived)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Center(
+                        child: Container(
+                          margin: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle_rounded,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  ltr(_sessionEmail),
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: theme
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
