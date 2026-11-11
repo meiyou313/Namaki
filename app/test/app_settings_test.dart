@@ -17,7 +17,6 @@ void main() {
     expect(s.locale, isNull);
     expect(s.themeMode, ThemeMode.system);
     expect(s.closeAction, CloseAction.ask);
-    expect(s.signInMethod, SignInMethod.api);
     expect(s.firstRun, isTrue);
     // Starting with Windows is on until the user turns it off.
     expect(s.autostart, isTrue);
@@ -31,7 +30,6 @@ void main() {
       language: 'fa',
       themeMode: ThemeMode.dark,
       closeAction: CloseAction.tray,
-      signInMethod: SignInMethod.browser,
       firstRun: false,
       autostart: false,
       autoConnect: true,
@@ -42,7 +40,6 @@ void main() {
     expect(again.locale, const Locale('fa'));
     expect(again.themeMode, ThemeMode.dark);
     expect(again.closeAction, CloseAction.tray);
-    expect(again.signInMethod, SignInMethod.browser);
     expect(again.firstRun, isFalse);
     expect(again.autostart, isFalse);
     expect(again.autoConnect, isTrue);
@@ -65,7 +62,6 @@ void main() {
     expect(s.language, '');
     expect(s.themeMode, ThemeMode.system);
     expect(s.closeAction, CloseAction.ask);
-    expect(s.signInMethod, SignInMethod.api);
   });
 
   test('takes the core executable from --core', () {
