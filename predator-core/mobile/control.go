@@ -173,10 +173,17 @@ func (b *Backend) login(ctx context.Context, email, password string) (object, er
 	b.pending = nil
 	data := object{"email": email, "authPW": passwordHash(email, password), "verificationMethod": "email-2fa"}
 	result, err := b.authRequest(ctx, "/account/login", data, "")
+	var captcha *needCaptchaError
+	if errors.As(err, &captcha) {
+		return object{"needsCaptcha": true, "captcha": captcha.image}, nil
+	}
 	var se *serviceError
 	if errors.As(err, &se) && se.errno == 107 {
 		delete(data, "verificationMethod")
 		result, err = b.authRequest(ctx, "/account/login", data, "")
+		if errors.As(err, &captcha) {
+			return object{"needsCaptcha": true, "captcha": captcha.image}, nil
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -397,6 +404,35 @@ func solvePow(base, hash string) (string, error) {
 	}
 	return "", errors.New("Unable to complete service verification")
 }
+
+// A service-verification CAPTCHA the user must solve. The challenge
+// solver pauses here: the image goes to the UI, the answer comes back
+// through solveCaptcha, and only then is the verification posted. The
+// jar is the solver's cookie jar, so the post-back sees the same session
+// that fetched the challenge.
+type needCaptchaError struct {
+	image   string
+	root    string
+	token   string
+	answers []object
+	jar     http.CookieJar
+}
+
+func (e *needCaptchaError) Error() string {
+	return "The service requires a CAPTCHA"
+}
+
+// The CAPTCHA challenge the UI is solving, if any: the challenge
+// endpoint, the token and the answers already collected for the other
+// challenges in the round, the image, and the solver's cookie jar.
+type pendingChallenge struct {
+	root    string
+	token   string
+	answers []object
+	image   string
+	jar     http.CookieJar
+}
+
 func (b *Backend) challenge(ctx context.Context) error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -405,6 +441,13 @@ func (b *Backend) challenge(ctx context.Context) error {
 	// Reuse the physical-network transport but start with a fresh challenge jar.
 	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
 	if err := solver.solveChallenge(ctx); err != nil {
+		var captcha *needCaptchaError
+		if errors.As(err, &captcha) {
+			b.pendingChallenge = &pendingChallenge{
+				root: captcha.root, token: captcha.token,
+				answers: captcha.answers, image: captcha.image, jar: captcha.jar,
+			}
+		}
 		return err
 	}
 	for _, address := range []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/"} {
@@ -413,6 +456,44 @@ func (b *Backend) challenge(ctx context.Context) error {
 	}
 	return nil
 }
+
+// solveCaptcha submits the user's answer to a pending service-verification
+// CAPTCHA. On success the verification is complete (the challenge cookies
+// move onto the account client) and the caller retries the sign-in. A
+// fresh CAPTCHA is reported the same way login reports one, so the UI can
+// show it again.
+func (b *Backend) solveCaptcha(ctx context.Context, answer string) (object, error) {
+	p := b.pendingChallenge
+	if p == nil {
+		return nil, errors.New("No CAPTCHA to solve")
+	}
+	answer = strings.TrimSpace(answer)
+	if answer == "" {
+		return nil, errors.New("Enter the characters shown in the image")
+	}
+	answers := append(append([]object{}, p.answers...), object{"ty": "captcha", "answer": answer})
+	// The post-back must see the same session that fetched the challenge.
+	client := &http.Client{Transport: b.client.Transport, Jar: p.jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}
+	solver := &Backend{client: client}
+	if err := solver.finishChallenge(ctx, p.root, p.token, answers); err != nil {
+		var captcha *needCaptchaError
+		if errors.As(err, &captcha) {
+			b.pendingChallenge = &pendingChallenge{
+				root: captcha.root, token: captcha.token,
+				answers: captcha.answers, image: captcha.image, jar: captcha.jar,
+			}
+			return object{"needsCaptcha": true, "captcha": captcha.image}, nil
+		}
+		return nil, err
+	}
+	for _, address := range []string{"https://api.accounts.firefox.com/", "https://accounts.firefox.com/"} {
+		u, _ := url.Parse(address)
+		b.client.Jar.SetCookies(u, p.jar.Cookies(u))
+	}
+	b.pendingChallenge = nil
+	return object{"solved": true}, nil
+}
+
 func (b *Backend) solveChallenge(ctx context.Context) error {
 	headers := http.Header{"User-Agent": []string{accountAgent}, "Accept": []string{"text/html"}}
 	for _, base := range []string{"https://api.accounts.firefox.com", "https://accounts.firefox.com"} {
@@ -436,65 +517,124 @@ func (b *Backend) solveChallenge(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		for round := 0; round < 3; round++ {
-			answers := []object{}
-			for _, c := range challenges {
-				switch str(c, "ty") {
-				case "pow":
-					d := obj(c, "data")
-					answer, e := solvePow(str(d, "base"), str(d, "hash"))
-					if e != nil {
-						return e
-					}
-					answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
-				case "pat":
-					raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
-					if e != nil {
-						return e
-					}
-					auth := ""
-					if status != 400 && status != 401 {
-						var d object
-						json.Unmarshal(raw, &d)
-						auth = str(d, "auth")
-					}
-					answers = append(answers, object{"ty": "pat", "auth": auth})
-				case "clientmetrics":
-					answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
-				default:
-					return errors.New("The service requires an interactive challenge. Try again later")
-				}
-			}
-			encoded, _ := json.Marshal(object{"token": token, "data": answers})
-			postHeaders := headers.Clone()
-			postHeaders.Set("Origin", base)
-			postHeaders.Set("Content-Type", "application/json")
-			raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
-			if e != nil {
-				return e
-			}
-			if status != 200 {
-				return errors.New("Service verification failed")
-			}
-			var d object
-			if json.Unmarshal(raw, &d) != nil {
-				return errors.New("Invalid service verification response")
-			}
-			if str(d, "status") == "success" {
-				return nil
-			}
-			challenges = nil
-			for _, v := range list(d, "ch") {
-				c, _ := v.(map[string]any)
-				challenges = append(challenges, c)
-			}
-			token = str(d, "tok")
-			if token == "" || len(challenges) == 0 {
-				return errors.New("Service verification did not complete")
-			}
+		answers, captchaImage, err := b.solveChallengeRound(ctx, root, token, challenges)
+		if err != nil {
+			return err
 		}
+		if captchaImage != "" {
+			return &needCaptchaError{image: captchaImage, root: root, token: token, answers: answers, jar: b.client.Jar}
+		}
+		if err := b.finishChallenge(ctx, root, token, answers); err != nil {
+			return err
+		}
+		return nil
 	}
 	return errors.New("Could not complete service verification. Try again later")
+}
+
+// solveChallengeRound solves one round's non-CAPTCHA challenges and
+// reports a CAPTCHA image when the round needs one. The answers for the
+// other challenges are returned so the CAPTCHA answer can join them in
+// the post-back.
+func (b *Backend) solveChallengeRound(ctx context.Context, root, token string, challenges []object) ([]object, string, error) {
+	headers := http.Header{"User-Agent": []string{accountAgent}, "Accept": []string{"text/html"}}
+	answers := []object{}
+	var captchaImage string
+	for _, c := range challenges {
+		switch str(c, "ty") {
+		case "pow":
+			d := obj(c, "data")
+			answer, e := solvePow(str(d, "base"), str(d, "hash"))
+			if e != nil {
+				return nil, "", e
+			}
+			answers = append(answers, object{"ty": "pow", "base": d["base"], "answer": answer, "hmac": d["hmac"], "expires": d["expires"]})
+		case "pat":
+			raw, _, status, e := b.fetch(ctx, root+"/pat?token="+url.QueryEscape(token), "POST", nil, headers)
+			if e != nil {
+				return nil, "", e
+			}
+			auth := ""
+			if status != 400 && status != 401 {
+				var d object
+				json.Unmarshal(raw, &d)
+				auth = str(d, "auth")
+			}
+			answers = append(answers, object{"ty": "pat", "auth": auth})
+		case "clientmetrics":
+			answers = append(answers, object{"ty": "clientmetrics", "webdriver": false, "bot_detection_result": object{"bot_detected": false, "bot_kind": nil}, "browser_metrics": object{"client_data": "{}", "error_trace": nil}, "detector_results": object{}, "v": 2})
+		case "captcha":
+			captchaImage = str(obj(c, "data"), "image_b64")
+			if captchaImage == "" {
+				return nil, "", errors.New("Service verification failed")
+			}
+		default:
+			return nil, "", errors.New("The service requires an interactive challenge. Try again later")
+		}
+	}
+	return answers, captchaImage, nil
+}
+
+// postChallengeAnswers posts one round of answers and returns the next
+// round's challenges, or nil when the service accepted the verification.
+func (b *Backend) postChallengeAnswers(ctx context.Context, base, root, token string, answers []object) ([]object, string, error) {
+	headers := http.Header{"User-Agent": []string{accountAgent}, "Accept": []string{"text/html"}}
+	encoded, _ := json.Marshal(object{"token": token, "data": answers})
+	postHeaders := headers.Clone()
+	postHeaders.Set("Origin", base)
+	postHeaders.Set("Content-Type", "application/json")
+	raw, _, status, e := b.fetch(ctx, root+"/fst-post-back", "POST", encoded, postHeaders)
+	if e != nil {
+		return nil, "", e
+	}
+	if status != 200 {
+		return nil, "", errors.New("Service verification failed")
+	}
+	var d object
+	if json.Unmarshal(raw, &d) != nil {
+		return nil, "", errors.New("Invalid service verification response")
+	}
+	if str(d, "status") == "success" {
+		return nil, "", nil
+	}
+	challenges := []object{}
+	for _, v := range list(d, "ch") {
+		c, _ := v.(map[string]any)
+		challenges = append(challenges, c)
+	}
+	token = str(d, "tok")
+	if token == "" || len(challenges) == 0 {
+		return nil, "", errors.New("Service verification did not complete")
+	}
+	return challenges, token, nil
+}
+
+// finishChallenge posts answers and follows the service's replies for up
+// to three rounds, solving further non-CAPTCHA challenges itself. A fresh
+// CAPTCHA pauses with a needCaptchaError so the UI can show it.
+func (b *Backend) finishChallenge(ctx context.Context, root, token string, answers []object) error {
+	base := root
+	if i := strings.Index(root, "/_fs-ch-"); i >= 0 {
+		base = root[:i]
+	}
+	for round := 0; round < 3; round++ {
+		challenges, nextToken, err := b.postChallengeAnswers(ctx, base, root, token, answers)
+		if err != nil {
+			return err
+		}
+		if challenges == nil {
+			return nil
+		}
+		answers, captchaImage, err := b.solveChallengeRound(ctx, root, nextToken, challenges)
+		if err != nil {
+			return err
+		}
+		if captchaImage != "" {
+			return &needCaptchaError{image: captchaImage, root: root, token: nextToken, answers: answers, jar: b.client.Jar}
+		}
+		token = nextToken
+	}
+	return errors.New("Service verification did not complete")
 }
 
 func displayCity(country, city string) string {
