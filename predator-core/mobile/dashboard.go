@@ -1011,18 +1011,60 @@ func (d *dashboard) handleStartSignIn(w http.ResponseWriter, r *http.Request) {
 	if d.signins == nil {
 		d.signins = map[string]object{}
 	}
-	method := "email-2fa"
+	entry := object{"email": email, "method": "email-2fa"}
 	if res != nil {
-		method = str(res, "verificationMethod")
+		if m := str(res, "verificationMethod"); m != "" {
+			entry["method"] = m
+		}
 	}
-	d.signins[id] = object{"email": email, "method": method}
+	d.signins[id] = entry
 	d.mu.Unlock()
+	d.writeLoginResult(w, id, email, password, res)
+}
 
+// writeLoginResult reports what a login call returned: a CAPTCHA to
+// solve, a verification code to enter, or a completed sign-in. The
+// password is kept in the sign-in entry only while a CAPTCHA is pending,
+// so a solved CAPTCHA can retry the login without asking again; it is
+// dropped as soon as the sign-in moves on.
+func (d *dashboard) writeLoginResult(w http.ResponseWriter, id, email, password string, res object) {
+	if res != nil && yes(res, "needsCaptcha") {
+		d.mu.Lock()
+		if s, ok := d.signins[id]; ok {
+			s["step"] = "need_captcha"
+			s["captcha"] = str(res, "captcha")
+			s["password"] = password
+		}
+		d.mu.Unlock()
+		writeJSON(w, http.StatusOK, object{
+			"id": id, "email": email, "step": "need_captcha",
+			"captcha": str(res, "captcha"), "password_accepted": true,
+		})
+		return
+	}
+	// No CAPTCHA pending: the password is not needed any more.
+	d.mu.Lock()
+	if s, ok := d.signins[id]; ok {
+		delete(s, "password")
+	}
+	d.mu.Unlock()
 	if res != nil && yes(res, "needsCode") {
+		method := str(res, "verificationMethod")
+		if method == "" {
+			d.mu.Lock()
+			method = str(d.signins[id], "method")
+			d.mu.Unlock()
+		}
 		step := "need_email_code"
 		if method == "totp-2fa" {
 			step = "need_totp"
 		}
+		d.mu.Lock()
+		if s, ok := d.signins[id]; ok {
+			s["step"] = step
+			s["method"] = method
+		}
+		d.mu.Unlock()
 		writeJSON(w, http.StatusOK, object{
 			"id": id, "email": email, "step": step,
 			"password_accepted": true,
@@ -1065,7 +1107,8 @@ func (d *dashboard) handleSignInState(w http.ResponseWriter, r *http.Request, id
 	if step := str(s, "step"); step != "" {
 		writeJSON(w, http.StatusOK, object{
 			"id": id, "email": str(s, "email"), "step": step,
-			"error": str(s, "error"), "error_code": str(s, "error_code"),
+			"captcha": str(s, "captcha"),
+			"error":   str(s, "error"), "error_code": str(s, "error_code"),
 			"password_accepted": true,
 		})
 		return
@@ -1085,8 +1128,19 @@ func (d *dashboard) handleSignInState(w http.ResponseWriter, r *http.Request, id
 
 func (d *dashboard) handleAnswerSignIn(w http.ResponseWriter, r *http.Request, id string) {
 	body := readBody(r)
-	code := str(body, "value")
-	if _, err := d.call("verify", code); err != nil {
+	value := str(body, "value")
+	d.mu.Lock()
+	s, ok := d.signins[id]
+	d.mu.Unlock()
+	if !ok {
+		writeErr(w, http.StatusNotFound, "Unknown sign-in")
+		return
+	}
+	if str(s, "step") == "need_captcha" {
+		d.answerCaptcha(w, id, value)
+		return
+	}
+	if _, err := d.call("verify", value); err != nil {
 		writeJSON(w, http.StatusOK, object{
 			"id": id, "step": "failed",
 			"error": err.Error(), "error_code": "wrong_code",
@@ -1097,6 +1151,59 @@ func (d *dashboard) handleAnswerSignIn(w http.ResponseWriter, r *http.Request, i
 	delete(d.signins, id)
 	d.mu.Unlock()
 	writeJSON(w, http.StatusOK, object{"id": id, "step": "done"})
+}
+
+// answerCaptcha submits a CAPTCHA answer, then retries the login with the
+// stored credentials so the sign-in continues where it left off.
+func (d *dashboard) answerCaptcha(w http.ResponseWriter, id, value string) {
+	d.mu.Lock()
+	s, ok := d.signins[id]
+	email, password := "", ""
+	if ok {
+		email, password = str(s, "email"), str(s, "password")
+	}
+	d.mu.Unlock()
+	if !ok {
+		writeErr(w, http.StatusNotFound, "Unknown sign-in")
+		return
+	}
+	data, err := d.call("captcha", value)
+	if err != nil {
+		d.mu.Lock()
+		delete(d.signins, id)
+		d.mu.Unlock()
+		writeJSON(w, http.StatusOK, object{
+			"id": id, "step": "failed",
+			"error": err.Error(), "error_code": signInErrorCode(err),
+		})
+		return
+	}
+	res, _ := data.(map[string]any)
+	if res != nil && yes(res, "needsCaptcha") {
+		// A fresh CAPTCHA: show it again, keeping the credentials.
+		d.mu.Lock()
+		s["captcha"] = str(res, "captcha")
+		d.mu.Unlock()
+		writeJSON(w, http.StatusOK, object{
+			"id": id, "email": email, "step": "need_captcha",
+			"captcha": str(res, "captcha"), "password_accepted": true,
+		})
+		return
+	}
+	// CAPTCHA solved: retry the login.
+	data, err = d.call("login", object{"email": email, "password": password})
+	if err != nil {
+		d.mu.Lock()
+		delete(d.signins, id)
+		d.mu.Unlock()
+		writeJSON(w, http.StatusOK, object{
+			"id": id, "email": email, "step": "failed",
+			"error": err.Error(), "error_code": signInErrorCode(err),
+		})
+		return
+	}
+	res, _ = data.(map[string]any)
+	d.writeLoginResult(w, id, email, password, res)
 }
 
 // StartDashboard serves the Arman-compatible API on listen (use
