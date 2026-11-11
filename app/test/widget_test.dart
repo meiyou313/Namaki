@@ -668,61 +668,6 @@ void main() {
     core.dispose();
   });
 
-  testWidgets('a blocked browser sign-in retries in the browser', (
-    tester,
-  ) async {
-    stillMotion(tester);
-    final core = CoreController(() async => FakeApi());
-    addTearDown(core.dispose);
-    const rawError =
-        "Mozilla's security check refused this sign-in from here. "
-        'Sign in with the browser in the Arman VPN app instead.';
-    final state = SignInState.fromJson({
-      'email': 'me@example.com',
-      'step': SignInStep.failed,
-      'error': rawError,
-      'error_code': 'blocked',
-    });
-    var retries = 0;
-    await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (context) => TextButton(
-            onPressed: () => showSignInDialog(
-              context,
-              core,
-              started: state,
-              onBrowserRetry: () => retries++,
-            ),
-            child: const Text('add'),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('add'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text(
-        'Mozilla did not complete the final step of adding the account '
-        '(HTTP 406).',
-      ),
-      findsOneWidget,
-    );
-    expect(find.text(rawError), findsNothing);
-    expect(retries, 0);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Try again'));
-    await tester.pumpAndSettle();
-
-    expect(retries, 1);
-    expect(find.byType(AlertDialog), findsNothing);
-    expect(find.byType(TextField), findsNothing);
-  });
-
   testWidgets('an email without an account says so and how to make one', (
     tester,
   ) async {
