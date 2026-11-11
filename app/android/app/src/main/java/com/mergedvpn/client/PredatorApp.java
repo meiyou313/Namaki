@@ -212,6 +212,16 @@ public final class PredatorApp extends Application implements Host {
 
     @Override public String certificates() { return certificates == null ? "" : certificates; }
 
+    @Override public String bootstrapNodes() {
+        try (java.io.InputStream stream = getAssets().open("assets/bootstrap-nodes.txt");
+             java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int count;
+            while ((count = stream.read(buffer)) != -1) output.write(buffer, 0, count);
+            return output.toString("UTF-8");
+        } catch (Exception ignored) { return ""; }
+    }
+
     String loadCertificates() throws Exception {
         StringBuilder pem = new StringBuilder();
         try {
