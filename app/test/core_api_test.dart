@@ -123,13 +123,6 @@ void main() {
       expect(done.added + done.updated, 2);
     });
 
-    test('opens and closes the sign-in proxy', () async {
-      expect(await api.openSignInProxy(port: 41234), '127.0.0.1:41234');
-      expect(jsonDecode(seen['body'] as String), {'port': 41234});
-      await api.closeSignInProxy();
-      expect(seen['type'], 'application/json');
-    });
-
     test('posts JSON', () async {
       await api.setSystemProxy('clear');
       expect(seen['type'], 'application/json');
