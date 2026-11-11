@@ -20,9 +20,6 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.provider.OpenableColumns
-import androidx.webkit.ProxyConfig
-import androidx.webkit.ProxyController
-import androidx.webkit.WebViewFeature
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -177,29 +174,6 @@ class MainActivity : FlutterActivity() {
                     )
                     if (call.argument<Boolean>("apply") == true) PredatorBridge.reconnect(this)
                     result.success(null)
-                }
-                // The browser sign-in's WebView goes through the core's
-                // sign-in proxy (an address), or straight out again (null).
-                // The override covers every WebView of this app, and takes
-                // effect once the callback runs.
-                "setWebViewProxy" -> {
-                    if (!WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
-                        result.success(false)
-                        return@setMethodCallHandler
-                    }
-                    val address = call.argument<String>("address")
-                    val proxies = ProxyController.getInstance()
-                    val done = Runnable { result.success(true) }
-                    val onMain = Executor { main.post(it) }
-                    if (address.isNullOrEmpty()) {
-                        proxies.clearProxyOverride(onMain, done)
-                    } else {
-                        proxies.setProxyOverride(
-                            ProxyConfig.Builder().addProxyRule(address).build(),
-                            onMain,
-                            done,
-                        )
-                    }
                 }
                 // Saves a file (a backup) where the user picks, with the
                 // system's own dialog: no storage permission. Answers the
