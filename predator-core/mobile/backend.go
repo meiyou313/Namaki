@@ -76,6 +76,7 @@ type Backend struct {
 	action                                           sync.Mutex
 	host                                             Host
 	settings, auth, pending                          object
+	pendingChallenge                                 *pendingChallenge
 	client                                           *http.Client
 	dialer                                           *net.Dialer
 	roots                                            *x509.CertPool
@@ -373,12 +374,16 @@ func (b *Backend) Call(channel, argsJSON string) string {
 		result, err = b.login(ctx, str(v, "email"), str(v, "password"))
 	case "verify":
 		result, err = b.verify(ctx, text(0))
+	case "captcha":
+		result, err = b.solveCaptcha(ctx, text(0))
 	case "logout":
 		b.Disconnect()
 		b.pending = nil
+		b.pendingChallenge = nil
 		err = b.setAuth(nil)
 	case "cancelAccountLogin":
 		b.pending = nil
+		b.pendingChallenge = nil
 	case "accountPreferences":
 		auto, ok := arg(0).(bool)
 		if !ok {
