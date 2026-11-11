@@ -93,6 +93,12 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 	// The status also names the session's email, which fills in for a
 	// caller that had none.
 	verified := false
+	// Consecutive transport failures (the request never reached the
+	// service at all): five in a row is a blocked route, not a
+	// session still waiting, so say so instead of polling for the
+	// better part of an hour. A service answer, even an error one,
+	// proves the route works and resets the count.
+	transportFailures := 0
 	for attempt := 0; attempt < 100 && !verified; attempt++ {
 		if attempt > 0 {
 			select {
@@ -107,8 +113,17 @@ func (b *Backend) browserLogin(ctx context.Context, email, sessionToken string) 
 			if errors.As(err, &se) && (se.status == 400 || se.status == 401) {
 				return fail(errors.New("The browser session is no longer valid. Please sign in again in the browser page."))
 			}
+			if !errors.As(err, &se) {
+				transportFailures++
+				if transportFailures >= 5 {
+					return fail(errors.New("The account service could not be reached. Check your connection, or sign in while a VPN is on, and try again."))
+				}
+			} else {
+				transportFailures = 0
+			}
 			continue
 		}
+		transportFailures = 0
 		if email == "" {
 			email = str(status, "email")
 		}

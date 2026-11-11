@@ -81,24 +81,35 @@ type Backend struct {
 	settings, auth, pending                          object
 	client                                           *http.Client
 	dialer                                           *net.Dialer
-	roots                                            *x509.CertPool
-	servers                                          []object
-	logs                                             []object
-	latencies                                        object
-	connection                                       string
-	platform                                         string
-	started                                          int64
-	exit, quota                                      object
-	lastError                                        string
-	busy, pinging, systemDark                        bool
-	pingingIDs                                       []string
-	tunnel                                           *proxyTunnel
-	cancel                                           context.CancelFunc
-	epoch                                            uint64
-	pingCancel                                       context.CancelFunc
-	pingEpoch                                        uint64
-	updates                                          releaseUpdates
-	authRefresh                                      sync.Mutex
+	// signinClient is the account sign-in's own client: its dialer
+	// neither protects its sockets (so they travel the system's
+	// route, including a VPN the person already runs) nor overrides
+	// DNS (so names resolve the way the system does). The protected
+	// dialer bypasses every VPN, which is right for the tunnel but
+	// wrong for signing in: where the account service is blocked
+	// directly, the sign-in can only reach it through the person's
+	// VPN. The sign-in proxy dials through signinDialer too, so the
+	// browser view reaches the sign-in pages the same way.
+	signinClient              *http.Client
+	signinDialer              *net.Dialer
+	roots                     *x509.CertPool
+	servers                   []object
+	logs                      []object
+	latencies                 object
+	connection                string
+	platform                  string
+	started                   int64
+	exit, quota               object
+	lastError                 string
+	busy, pinging, systemDark bool
+	pingingIDs                []string
+	tunnel                    *proxyTunnel
+	cancel                    context.CancelFunc
+	epoch                     uint64
+	pingCancel                context.CancelFunc
+	pingEpoch                 uint64
+	updates                   releaseUpdates
+	authRefresh               sync.Mutex
 	// signinProxy is the browser sign-in's proxy (signinproxy): started
 	// the first time the app opens the sign-in page, and kept on its
 	// port while the core runs, since a Windows browser view keeps the
@@ -155,7 +166,21 @@ func NewBackend(host Host, vault string) *Backend {
 	b.dialer = &net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second, Control: control, Resolver: resolver}
 	jar, _ := cookiejar.New(nil)
 	b.client = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.dialer.DialContext, DialTLSContext: b.dialTLS, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	// The sign-in's own dialer: no socket protection and the system's
+	// DNS, so its traffic follows the system's route (and a VPN the
+	// person already runs). It shares the cookie jar with the main
+	// client, so challenge cookies earned on either path count on
+	// both.
+	b.signinDialer = &net.Dialer{Timeout: 15 * time.Second, KeepAlive: 30 * time.Second}
+	b.signinClient = &http.Client{Timeout: 30 * time.Second, Jar: jar, Transport: &http.Transport{DialContext: b.signinDialer.DialContext, DialTLSContext: b.dialTLSSignin, TLSClientConfig: &tls.Config{RootCAs: roots, MinVersion: tls.VersionTLS12}, ForceAttemptHTTP2: true}, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	return b
+}
+
+// dialTLSSignin opens the TLS connection the way dialTLS does (a Firefox
+// ClientHello), but over the sign-in's unprotected dialer, so the
+// handshake travels the system's route instead of bypassing every VPN.
+func (b *Backend) dialTLSSignin(ctx context.Context, network, addr string) (net.Conn, error) {
+	return b.dialTLSWith(b.signinDialer, ctx, network, addr)
 }
 
 // dialTLS opens the TLS connection the way a browser does. The TCP
@@ -165,7 +190,14 @@ func NewBackend(host Host, vault string) *Backend {
 // strong bot signal, and the account service answered it with a CAPTCHA
 // even when the same request from a browser fingerprint did not.
 func (b *Backend) dialTLS(ctx context.Context, network, addr string) (net.Conn, error) {
-	conn, err := b.dialer.DialContext(ctx, network, addr)
+	return b.dialTLSWith(b.dialer, ctx, network, addr)
+}
+
+// dialTLSWith is the shared handshake behind dialTLS and
+// dialTLSSignin: the TCP connection comes from the given dialer, the
+// handshake is a Firefox ClientHello (uTLS).
+func (b *Backend) dialTLSWith(dialer *net.Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := dialer.DialContext(ctx, network, addr)
 	if err != nil {
 		return nil, err
 	}

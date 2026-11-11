@@ -28,6 +28,18 @@ const prefix = "identity.mozilla.com/picl/v1/"
 const clientID = "5882386c6d801776"
 const scope = "profile https://identity.mozilla.com/apps/vpn"
 
+// fxaHosts are the account service's hosts: the sign-in, the session
+// status, and the OAuth token exchange. Requests to them travel the
+// sign-in client (the system's route, so a VPN the person already runs
+// carries them); every other host keeps the protected client.
+var fxaHosts = map[string]bool{
+	"api.accounts.firefox.com":   true,
+	"accounts.firefox.com":       true,
+	"oauth.accounts.firefox.com": true,
+}
+
+func isFxAHost(host string) bool { return fxaHosts[strings.ToLower(host)] }
+
 var packageName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$`)
 var hostName = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$`)
 
@@ -98,7 +110,15 @@ func (b *Backend) fetch(ctx context.Context, address, method string, body []byte
 	for k, v := range headers {
 		req.Header[k] = v
 	}
-	response, err := b.client.Do(req)
+	// The account service travels the sign-in client (the system's
+	// route); everything else keeps the protected client. A Backend
+	// built without a sign-in client (the challenge solver's copies)
+	// falls back to the main client.
+	client := b.client
+	if u, err := url.Parse(address); err == nil && isFxAHost(u.Hostname()) && b.signinClient != nil {
+		client = b.signinClient
+	}
+	response, err := client.Do(req)
 	if err != nil {
 		return nil, nil, 0, err
 	}
@@ -419,11 +439,23 @@ func (b *Backend) challenge(ctx context.Context) error {
 		return err
 	}
 	// Reuse the physical-network transport but start with a fresh challenge jar.
-	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
+	solver := b.solverBackend(jar)
 	if err := solver.solveChallenge(ctx); err != nil {
 		return err
 	}
 	return b.installChallengeCookies(jar)
+}
+
+// solverBackend is a Backend for solving a challenge: the main client's
+// protected transport for ordinary hosts, the sign-in client's
+// transport for the account hosts, and a fresh cookie jar for both,
+// so the challenge cookies it earns are the jar's own to install.
+func (b *Backend) solverBackend(jar *cookiejar.Jar) *Backend {
+	s := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
+	if b.signinClient != nil {
+		s.signinClient = &http.Client{Transport: b.signinClient.Transport, Jar: jar, Timeout: b.signinClient.Timeout, CheckRedirect: b.signinClient.CheckRedirect}
+	}
+	return s
 }
 
 // challengeFromBody solves the challenge that came with a 406 response,
@@ -441,7 +473,7 @@ func (b *Backend) challengeFromBody(ctx context.Context, body []byte, origin str
 	if err != nil {
 		return err
 	}
-	solver := &Backend{client: &http.Client{Transport: b.client.Transport, Jar: jar, Timeout: b.client.Timeout, CheckRedirect: b.client.CheckRedirect}}
+	solver := b.solverBackend(jar)
 	// The page's challenge types were chosen for the request that was
 	// just made, so the account's own agent is tried first; when it
 	// cannot clear them, the browser agents try the same page, since
