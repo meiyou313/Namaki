@@ -193,6 +193,8 @@
   "modeFastestHint": "每次连接时自动选择延迟最低的节点。",
   "testDelay": "测试真实延迟",
   "testingDelay": "正在测试…可能需要一分钟",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "搜索",
   "noAnswer": "无响应",
   "testedAgo": "{ago}测试",
