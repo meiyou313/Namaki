@@ -151,6 +151,14 @@ abstract final class UsageHistory {
     return out;
   }
 
+  /// The bytes used in the current calendar month, from the locally
+  /// sampled history. The account quota's remaining (from Mozilla) does
+  /// not always move with real usage — it can sit at the full limit
+  /// while the device has transferred data — so this is the floor for
+  /// the "used" number the UI shows.
+  static int get thisMonthTotal =>
+      lastMonths(1).firstOrNull?.total ?? 0;
+
   static DateTime _atMidnight(DateTime d) => DateTime(d.year, d.month, d.day);
 
   /// The Saturday of [d]'s week (Persian weeks start on Saturday).
