@@ -193,6 +193,8 @@
   "modeFastestHint": "При каждом подключении выбирается локация с наименьшей задержкой.",
   "testDelay": "Проверить задержку",
   "testingDelay": "Проверка… это может занять до минуты",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Поиск",
   "noAnswer": "Нет ответа",
   "testedAgo": "Проверено {ago}",
