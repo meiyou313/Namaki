@@ -193,6 +193,8 @@
   "modeFastestHint": "Mỗi lần kết nối, chọn vị trí có độ trễ thấp nhất.",
   "testDelay": "Đo độ trễ thực",
   "testingDelay": "Đang đo… có thể mất một phút",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Tìm kiếm",
   "noAnswer": "Không phản hồi",
   "testedAgo": "Đã đo {ago}",
