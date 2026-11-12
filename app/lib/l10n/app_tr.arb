@@ -193,6 +193,8 @@
   "modeFastestHint": "Her bağlantıda en düşük gecikmeli konum.",
   "testDelay": "Gerçek gecikmeyi test et",
   "testingDelay": "Test ediliyor… bu bir dakika sürebilir",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Ara",
   "noAnswer": "Yanıt yok",
   "testedAgo": "{ago} test edildi",
