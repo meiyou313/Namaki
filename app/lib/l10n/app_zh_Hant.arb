@@ -193,6 +193,8 @@
   "modeFastestHint": "每次連線時自動選擇延遲最低的位置。",
   "testDelay": "測試真實延遲",
   "testingDelay": "正在測試…可能需要一分鐘",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "搜尋",
   "noAnswer": "無回應",
   "testedAgo": "測試於 {ago}",
