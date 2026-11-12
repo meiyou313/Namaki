@@ -193,6 +193,8 @@
   "modeFastestHint": "Lokasi dengan ping terendah, dipilih di setiap koneksi.",
   "testDelay": "Uji ping asli",
   "testingDelay": "Menguji… bisa sampai satu menit",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Cari",
   "noAnswer": "Tidak merespons",
   "testedAgo": "Diuji {ago}",
