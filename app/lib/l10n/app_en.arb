@@ -459,6 +459,8 @@
   "modeFastestHint": "The location with the lowest delay at each connection.",
   "testDelay": "Test real delay",
   "testingDelay": "Testing… this can take a minute",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Search",
   "noAnswer": "No answer",
   "testedAgo": "Tested {ago}",
