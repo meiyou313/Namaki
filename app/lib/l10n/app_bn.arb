@@ -193,6 +193,8 @@
   "modeFastestHint": "প্রতিবার সংযোগের সময় সবচেয়ে কম ডিলের লোকেশন।",
   "testDelay": "আসল ডিলে পরীক্ষা করুন",
   "testingDelay": "পরীক্ষা চলছে… এতে এক মিনিট লাগতে পারে",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "খুঁজুন",
   "noAnswer": "সাড়া নেই",
   "testedAgo": "{ago} পরীক্ষা করা হয়েছে",
