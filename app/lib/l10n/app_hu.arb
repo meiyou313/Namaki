@@ -193,6 +193,8 @@
   "modeFastestHint": "A legkisebb késleltetésű helyszín minden csatlakozáskor.",
   "testDelay": "Valós késleltetés mérése",
   "testingDelay": "Tesztelés… ez egy percig is eltarthat",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Keresés",
   "noAnswer": "Nincs válasz",
   "testedAgo": "Tesztelve: {ago}",
