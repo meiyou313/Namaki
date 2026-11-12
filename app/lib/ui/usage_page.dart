@@ -47,18 +47,25 @@ class _UsagePageState extends State<UsagePage> {
           final month = UsageHistory.lastMonths(1).firstOrNull?.total ?? 0;
           final traffic = status?.traffic;
           final usage = status?.activeAccount?.usage;
+          // The quota's remaining (from Mozilla) can sit at the full
+          // limit while the device has transferred data, so the used
+          // number is the larger of the quota's own figure and the
+          // locally measured month total.
+          final quotaUsed = usage == null
+              ? 0
+              : (usage.usedBytes > month ? usage.usedBytes : month)
+                  .clamp(0, usage.limitBytes);
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               if (usage != null && !usage.unlimited) ...[
                 _SummaryCard(
                   title: l.dataUsedTitle,
-                  value: formatBytes(usage.usedBytes),
+                  value: formatBytes(quotaUsed),
                   detail: l.dataLeftOf(formatBytes(usage.limitBytes)),
                   fraction: usage.limitBytes == 0
                       ? 0
-                      : usage.usedBytes.clamp(0, usage.limitBytes) /
-                          usage.limitBytes,
+                      : quotaUsed / usage.limitBytes,
                 ),
                 const SizedBox(height: 16),
               ],
