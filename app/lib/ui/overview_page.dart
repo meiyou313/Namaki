@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../app_settings.dart';
 import '../core/android_core.dart';
 import '../core/core_controller.dart';
+import '../core/usage_history.dart';
 import '../core/updates.dart';
 import '../core/models.dart';
 import '../core/ports.dart';
@@ -1823,7 +1824,15 @@ class _HomeData extends StatelessWidget {
         ],
       );
     } else {
-      final used = usage.usedBytes.clamp(0, usage.limitBytes);
+      // The quota's remaining (from Mozilla) can sit at the full limit
+      // while the device has transferred data, so the used number is the
+      // larger of the quota's own figure and the locally measured month
+      // total (see UsageHistory.thisMonthTotal).
+      final monthUsed = UsageHistory.thisMonthTotal;
+      final used = (usage.usedBytes > monthUsed
+              ? usage.usedBytes
+              : monthUsed)
+          .clamp(0, usage.limitBytes);
       final fraction = usage.limitBytes == 0 ? 0.0 : used / usage.limitBytes;
       final color = quotaColor(fraction * 100, status.thresholdPercent);
       body = Row(
