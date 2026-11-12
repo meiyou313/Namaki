@@ -193,6 +193,8 @@
   "modeFastestHint": "الموقع الأقل تأخيرًا عند كل اتصال.",
   "testDelay": "اختبار التأخير الفعلي",
   "testingDelay": "جارٍ الاختبار… قد يستغرق ذلك دقيقة",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "بحث",
   "noAnswer": "لا استجابة",
   "testedAgo": "اختُبر {ago}",
