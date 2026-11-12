@@ -193,6 +193,8 @@
   "modeFastestHint": "La ubicación con menor latencia en cada conexión.",
   "testDelay": "Medir latencia real",
   "testingDelay": "Probando… puede tardar un minuto",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Buscar",
   "noAnswer": "Sin respuesta",
   "testedAgo": "Probado {ago}",
