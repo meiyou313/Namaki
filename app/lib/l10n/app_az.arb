@@ -193,6 +193,8 @@
   "modeFastestHint": "Hər qoşulanda ən az gecikməli məkan seçilir.",
   "testDelay": "Real gecikməni yoxla",
   "testingDelay": "Yoxlanılır… bu bir dəqiqə çəkə bilər",
+  "pingTargetTitle": "Ping test target",
+  "pingTargetHint": "Pick the service you use most — the ping test runs through it, so the result matches your real experience.",
   "search": "Axtar",
   "noAnswer": "Cavab yoxdur",
   "testedAgo": "Yoxlanıb: {ago}",
