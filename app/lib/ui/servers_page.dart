@@ -220,9 +220,10 @@ class _ServersPageState extends State<ServersPage> {
     final recommended = (_locations ?? const <Location>[])
         .where((loc) => isRecommendedPlace(loc.code))
         .firstOrNull;
-    final delayLine =
-        _summary ??
-        (_pingedAt == null ? null : l.testedAgo(formatAgo(l, _pingedAt!)));
+    final delayLine = _testing
+        ? l.testingDelay
+        : _summary ??
+            (_pingedAt == null ? null : l.testedAgo(formatAgo(l, _pingedAt!)));
     final noAccounts = _noAccounts;
     return ListView(
       padding: pagePadding(context),
@@ -273,18 +274,23 @@ class _ServersPageState extends State<ServersPage> {
                 enabled: !_testing && _locations != null && !noAccounts,
                 onSelected: _pickTarget,
               ),
-              TextButton.icon(
-                onPressed: !_testing && _locations != null && !noAccounts
-                    ? _test
-                    : null,
-                icon: _testing
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.speed_rounded, size: 18),
-                label: Text(_testing ? l.testingDelay : l.testDelay),
-              ),
+              // While a test runs the button is just a spinner: the long
+              // "Testing…" label squeezed the Locations title into three
+              // lines. The status lives in the line under the header.
+              if (_testing)
+                const Padding(
+                  padding: EdgeInsets.all(11),
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                TextButton.icon(
+                  onPressed: _locations != null && !noAccounts ? _test : null,
+                  icon: const Icon(Icons.speed_rounded, size: 18),
+                  label: Text(l.testDelay),
+                ),
             ],
           ),
         ),
@@ -345,6 +351,8 @@ class _SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
@@ -538,7 +546,9 @@ class _Delay extends StatelessWidget {
 }
 
 /// The probe address the delay test measures through, as a small settings
-/// menu beside the test button. The names are the services' own, so no
+/// button beside the test button. It opens a bottom sheet — the old popup
+/// menu was cramped and plain — with the services to choose from and a
+/// note on why the choice matters. The names are the services' own, so no
 /// translation.
 class _PingTargetMenu extends StatelessWidget {
   const _PingTargetMenu({
@@ -554,20 +564,121 @@ class _PingTargetMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.settings_rounded),
-      iconSize: 18,
-      tooltip: l.navSettings,
-      enabled: enabled,
-      onSelected: onSelected,
-      itemBuilder: (context) => [
-        for (final entry in _pingTargets.entries)
-          CheckedPopupMenuItem<String>(
-            value: entry.key,
-            checked: entry.key == current,
-            child: Text(entry.value),
+    return IconButton(
+      icon: const Icon(Icons.settings_rounded, size: 20),
+      tooltip: l.pingTargetTitle,
+      onPressed: enabled ? () => _showSheet(context) : null,
+    );
+  }
+
+  Future<void> _showSheet(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l.pingTargetTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  l.pingTargetHint,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                for (final entry in _pingTargets.entries)
+                  _PingTargetRow(
+                    name: entry.value,
+                    selected: entry.key == current,
+                    onTap: () => Navigator.pop(context, entry.key),
+                  ),
+              ],
+            ),
           ),
-      ],
+        ),
+      ),
+    );
+    if (picked != null) onSelected(picked);
+  }
+}
+
+/// One probe address in the picker: the service's name and a check when
+/// it is the one the delay test measures through.
+class _PingTargetRow extends StatelessWidget {
+  const _PingTargetRow({
+    required this.name,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String name;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Material(
+      color: selected
+          ? scheme.primary.withValues(alpha: 0.08)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.circle_outlined,
+                color: selected ? scheme.primary : scheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
